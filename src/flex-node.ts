@@ -1,6 +1,5 @@
 import { YogaNode, Node, YogaEdge } from "yoga-layout-prebuilt"
 import { edgeToConstant, fromYoga, RemoveEdge, toYoga, YogaNodeProperties } from "."
-import nodeDefaults from "./node-defaults"
 
 const edgeRegex = /^(.+)(Top|Bottom|Left|Right)$/
 
@@ -33,11 +32,15 @@ export class FlexNode {
 
     commitChanges() {
         this.children.sort((a, b) => a.index - b.index)
-        for (let i = 0; i < this.node.getChildCount(); i++) {
+        for (let i = 0; i < this.children.length; i++) {
             const oldChild = this.node.getChild(i)
             const correctChild = this.children[i].node
             if (oldChild != correctChild) {
-                this.node.removeChild(oldChild)
+                console.log("change " + i) //TODO: this is called even when nothing has changed???
+                if (oldChild != null) {
+                    this.node.removeChild(oldChild)
+                }
+                this.node.removeChild(correctChild)
                 this.node.insertChild(correctChild, i)
             }
         }
@@ -87,7 +90,7 @@ export class FlexNode {
         const key = (edgeMatch == null ? name : edgeMatch[1]) as RemoveEdge<Name>
         const edgeProperties = edgeMatch == null ? [] : [edgeToConstant[edgeMatch[2] as keyof typeof edgeToConstant]]
         if (key == "measureFunc" && prefix === "get") {
-            throw "getProperty 'measureFunc' is not possible"
+            throw `getProperty "measureFunc" is not possible`
         }
         const fnName: `${Prefix}${Capitalize<Exclude<RemoveEdge<Name>, "measureFunc">>}` = `${prefix}${capitalize(
             key as Exclude<typeof key, "measureFunc">

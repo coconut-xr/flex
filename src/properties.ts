@@ -1,4 +1,14 @@
-import Yoga, { EDGE_BOTTOM, EDGE_LEFT, EDGE_RIGHT, EDGE_TOP, YogaNode } from "yoga-layout-prebuilt"
+import Yoga, {
+    EDGE_BOTTOM,
+    EDGE_LEFT,
+    EDGE_RIGHT,
+    EDGE_TOP,
+    UNIT_AUTO,
+    UNIT_PERCENT,
+    UNIT_POINT,
+    UNIT_UNDEFINED,
+    YogaNode,
+} from "yoga-layout-prebuilt"
 import enumLookups from "./enum-lookups"
 import nodeDefaults from "./node-defaults"
 
@@ -46,12 +56,10 @@ export const snakeCaseFromCamelCase = (str: string) =>
 export function toYoga(precision: number, name: string, value: any): any {
     if (value == null) {
         //default value
-        const def = nodeDefaults[name as keyof typeof nodeDefaults]
-        if (def == null) {
-            throw `no default found for property "${name}"`
-        }
-        return def
-    } else if (isKeyOf(name, enumsToPrefix)) {
+        value = nodeDefaults[name as keyof typeof nodeDefaults]
+    }
+
+    if (isKeyOf(name, enumsToPrefix)) {
         //string to yoga constant (number)
         const prefix = enumsToPrefix[name]
         if (typeof value != "string") {
@@ -59,29 +67,52 @@ export function toYoga(precision: number, name: string, value: any): any {
         }
         const key = `${snakeCaseFromCamelCase(prefix)}_${snakeCaseFromCamelCase(value)}`
         const constant = (Yoga as any)[key]
-        if (constant != null) {
-            return constant
+        if (constant == null) {
+            throw `unkown value "${value}" for property "${name}"`
         }
-        throw `unkown value "${value}" for property "${name}"`
-    } else if (typeof value === "number") {
-        //pixel value
-        return value / precision
+        return constant
     }
+
+    if (typeof value === "number") {
+        //point value
+        const number = value / precision
+        if (!Number.isInteger(number)) {
+            throw `bad precision ${precision}; the preicion must devide integers without rest`
+        }
+        return number
+    }
+
+    if (value == null) {
+        return NaN
+    }
+
     //string value (percentage / auto)
     return value
 }
 
 export function fromYoga(precision: number, name: string, value: any): any {
     if (typeof value === "object") {
-        if ("value" in value) {
-            value = value.value
-        } else {
-            throw `unknown return value "${value}" for getting property "${name}"`
+        switch (value.unit) {
+            case UNIT_AUTO:
+                if (name === "flexBasis") {
+                    return undefined //yoga returns unit auto, but there is not setFlexBasisAuto, therefore we can't let "auto" exist on flexBasis
+                }
+                value = "auto"
+                break
+            case UNIT_PERCENT:
+                value = `${value.value}%`
+                break
+            case UNIT_POINT:
+                value = value.value
+                break
+            case UNIT_UNDEFINED:
+                value = undefined
+                break
+            default:
+                throw `can't convert value "${value}" for property "${name}" from yoga`
         }
     }
-    if (typeof value === "number" && isNaN(value)) {
-        return undefined
-    }
+
     if (isKeyOf(name, enumLookups)) {
         //number to enum (string)
         const lookup = enumLookups[name]
@@ -90,7 +121,13 @@ export function fromYoga(precision: number, name: string, value: any): any {
         }
         throw `can't retranslate value "${value}" of property "${name}"`
     }
-    //string value (percentage / auto)
+
+    if (typeof value === "number") {
+        //point value
+        return isNaN(value) ? undefined : value * precision
+    }
+
+    //string value (percentage / auto / undefined)
     return value
 }
 

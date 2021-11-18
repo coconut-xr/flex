@@ -1,22 +1,8 @@
-# co-flex
+# co-yoga
 
-unoppinionated yoga react binding
-Use it with react-three-fiber, react-ogl, react-dom, ...
+yoga-layout convenience wrapper
 
-# How does it compare to react-three-flex
+# TBD
 
-- not directly focussed on react-three-fiber
-- more bare bones
-- more freedom / adaptation
-
-# Examples
-
-- react-dom
-- react-three-fiber
-- react-spring
-- co-virtualize
-
-# Concepts
-
-- YogaNodeProvider
-- useYogaNode
+-   create a property map (which describes the value type and possible values)
+-   also commit the property changes, and use the precision value, and save it to the flex-node so it can be used when retrieving the computed values

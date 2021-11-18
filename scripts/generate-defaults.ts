@@ -1,5 +1,6 @@
 import { EDGE_BOTTOM, EDGE_LEFT, EDGE_RIGHT, EDGE_TOP, Node } from "yoga-layout-prebuilt"
 import { writeFileSync } from "fs"
+import { fromYoga } from "../src"
 
 const node = Node.create()
 export const edges = new Set(["border", "padding", "margin", "position"])
@@ -21,25 +22,18 @@ export const propertyNamesWithFnNames: Array<[string, string]> = Object.keys(Obj
 const result: any = {}
 
 function addEdgeValues(name: string, key: string): void {
-    result[`${name}Top`] = flatten(node[key as "getMargin"](EDGE_TOP))
-    result[`${name}Bottom`] = flatten(node[key as "getMargin"](EDGE_BOTTOM))
-    result[`${name}Left`] = flatten(node[key as "getMargin"](EDGE_LEFT))
-    result[`${name}Right`] = flatten(node[key as "getMargin"](EDGE_RIGHT))
+    result[`${name}Top`] = fromYoga(1, name, node[key as "getMargin"](EDGE_TOP))
+    result[`${name}Bottom`] = fromYoga(1, name, node[key as "getMargin"](EDGE_BOTTOM))
+    result[`${name}Left`] = fromYoga(1, name, node[key as "getMargin"](EDGE_LEFT))
+    result[`${name}Right`] = fromYoga(1, name, node[key as "getMargin"](EDGE_RIGHT))
 }
 
 propertyNamesWithFnNames.forEach(([propertyName, fnName]) => {
     if (edges.has(propertyName)) {
         addEdgeValues(propertyName, fnName)
     } else {
-        result[propertyName] = flatten(node[fnName as "getWidth"]())
+        result[propertyName] = fromYoga(1, propertyName, node[fnName as "getWidth"]())
     }
 })
-
-function flatten(val: any): any {
-    if (typeof val === "object" && "value" in val) {
-        return val.value
-    }
-    return val
-}
 
 writeFileSync("src/node-defaults.ts", `export default ${JSON.stringify(result).replace(/null/g, "NaN")}`)
