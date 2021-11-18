@@ -1,5 +1,6 @@
 import Yoga, { EDGE_BOTTOM, EDGE_LEFT, EDGE_RIGHT, EDGE_TOP, YogaNode } from "yoga-layout-prebuilt"
 import enumLookups from "./enum-lookups"
+import nodeDefaults from "./node-defaults"
 
 type EdgeProperties = keyof {
     [Key in keyof YogaNode as YogaNode[Key] extends (...args: infer X) => any
@@ -42,30 +43,54 @@ export const enumsToPrefix: { [Key in keyof Enums]: string } = {
 export const snakeCaseFromCamelCase = (str: string) =>
     str.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`).toUpperCase()
 
-export function translateEnums<Name extends string>(
-    name: Name,
-    value: any
-): Name extends keyof Enums ? Enums[Name] : any {
-    if (isKeyOf(name, enumsToPrefix)) {
+export function toYoga(precision: number, name: string, value: any): any {
+    if (value == null) {
+        //default value
+        const def = nodeDefaults[name as keyof typeof nodeDefaults]
+        if (def == null) {
+            throw `no default found for property "${name}"`
+        }
+        return def
+    } else if (isKeyOf(name, enumsToPrefix)) {
+        //string to yoga constant (number)
         const prefix = enumsToPrefix[name]
+        if (typeof value != "string") {
+            throw `"${value}" is not a valid value for "${name}", expected a string`
+        }
         const key = `${snakeCaseFromCamelCase(prefix)}_${snakeCaseFromCamelCase(value)}`
         const constant = (Yoga as any)[key]
-        if (constant == null) {
-            throw `unkown value "${value}" for property "${name}"`
+        if (constant != null) {
+            return constant
         }
-        return constant
+        throw `unkown value "${value}" for property "${name}"`
+    } else if (typeof value === "number") {
+        //pixel value
+        return value / precision
     }
+    //string value (percentage / auto)
     return value
 }
 
-export function retranslateEnum(name: string, value: any): any {
+export function fromYoga(precision: number, name: string, value: any): any {
+    if (typeof value === "object") {
+        if ("value" in value) {
+            value = value.value
+        } else {
+            throw `unknown return value "${value}" for getting property "${name}"`
+        }
+    }
+    if (typeof value === "number" && isNaN(value)) {
+        return undefined
+    }
     if (isKeyOf(name, enumLookups)) {
+        //number to enum (string)
         const lookup = enumLookups[name]
         if (isKeyOf(value, lookup)) {
             return lookup[value]
         }
         throw `can't retranslate value "${value}" of property "${name}"`
     }
+    //string value (percentage / auto)
     return value
 }
 

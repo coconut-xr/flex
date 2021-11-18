@@ -1,4 +1,4 @@
-import Yoga, { Node } from "yoga-layout-prebuilt"
+import Yoga from "yoga-layout-prebuilt"
 import { writeFileSync } from "fs"
 import { enumsToPrefix, snakeCaseFromCamelCase } from "../src"
 

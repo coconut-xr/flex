@@ -1,15 +1,29 @@
-import { YogaNode, Node } from "yoga-layout-prebuilt"
-import { edgeToConstant, RemoveEdge, retranslateEnum, translateEnums, YogaNodeProperties } from "."
+import { YogaNode, Node, YogaEdge } from "yoga-layout-prebuilt"
+import { edgeToConstant, fromYoga, RemoveEdge, toYoga, YogaNodeProperties } from "."
 import nodeDefaults from "./node-defaults"
 
 const edgeRegex = /^(.+)(Top|Bottom|Left|Right)$/
 
+type FilterGetComputed<T, Name extends keyof T> = Name extends `getComputed${infer PropertyName}`
+    ? T[Name] extends (...args: Array<any>) => number
+        ? PropertyName
+        : never
+    : never
+
+export type GetParams<T, Key extends keyof T> = T[Key] extends (...args: infer Params) => number
+    ? Params extends []
+        ? []
+        : [edge: YogaEdge]
+    : never
+
+export type LayoutKeys = Uncapitalize<FilterGetComputed<YogaNode, keyof YogaNode>>
+
 export class FlexNode {
     private readonly node: YogaNode
-    private readonly children: Set<FlexNode> = new Set([])
-    public index: number | undefined
+    private readonly children: Array<FlexNode> = []
+    public index: number = 0
 
-    constructor(private readonly onCalc: () => void) {
+    constructor() {
         this.node = Node.create()
     }
 
@@ -18,32 +32,50 @@ export class FlexNode {
     }
 
     commitChanges() {
-        //TODO
-        this.children.forEach((child) => {})
-    }
-
-    private onCalculated(): void {
-        this.onCalc()
-        this.children.forEach((child) => child.onCalc())
+        this.children.sort((a, b) => a.index - b.index)
+        for (let i = 0; i < this.node.getChildCount(); i++) {
+            const oldChild = this.node.getChild(i)
+            const correctChild = this.children[i].node
+            if (oldChild != correctChild) {
+                this.node.removeChild(oldChild)
+                this.node.insertChild(correctChild, i)
+            }
+        }
     }
 
     insertChild(node: FlexNode): void {
-        this.children.add(node)
+        this.children.push(node)
     }
 
     removeChild(node: FlexNode): void {
-        this.children.delete(node)
+        const i = this.children.findIndex((n) => n === node)
+        if (i != -1) {
+            this.children.splice(i, 1)
+        }
     }
 
-    setProperty<Name extends keyof YogaNodeProperties>(name: Name, value: YogaNodeProperties[Name]): void {
+    getComputed<Key extends LayoutKeys>(
+        precision: number,
+        key: Key,
+        ...params: GetParams<YogaNode, `getComputed${Capitalize<Key>}`>
+    ) {
+        const func: Function = this.node[`getComputed${capitalize(key)}`]
+        if (func == null) {
+            throw `layout value "${key}" is not exisiting`
+        }
+        return func.call(this.node, ...params) * precision
+    }
+
+    setProperty<Name extends keyof YogaNodeProperties>(
+        precision: number,
+        name: Name,
+        value: YogaNodeProperties[Name]
+    ): void {
         if (value == null && name === "measureFunc") {
             this.node.unsetMeasureFunc()
             return
         }
-        this.setRawProperty(
-            name,
-            value == null ? nodeDefaults[name as keyof typeof nodeDefaults] : translateEnums(name, value)
-        )
+        this.setRawProperty(name, toYoga(precision, name, value))
     }
 
     private callNodeFunction<Prefix extends "get" | "set", Name extends keyof YogaNodeProperties>(
@@ -69,19 +101,8 @@ export class FlexNode {
 
     private setRawProperty = this.callNodeFunction.bind(this, "set")
 
-    getProperty<Name extends keyof YogaNodeProperties>(name: Name): YogaNodeProperties[Name] {
-        let value: YogaNodeProperties[Name] | { value: YogaNodeProperties[Name] } = this.getRawProperty(name)
-        if (typeof value === "object") {
-            if ("value" in value) {
-                value = value.value
-            } else {
-                throw `unknown return value "${value}" for getting property "${name}"`
-            }
-        }
-        if (typeof value === "number" && isNaN(value)) {
-            return undefined
-        }
-        return retranslateEnum(name, value)
+    getProperty<Name extends keyof YogaNodeProperties>(precision: number, name: Name): YogaNodeProperties[Name] {
+        return fromYoga(precision, name, this.getRawProperty(name))
     }
 
     private getRawProperty = this.callNodeFunction.bind(this, "get")
