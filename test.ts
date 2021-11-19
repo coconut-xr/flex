@@ -44,29 +44,29 @@ const testValues: Omit<YogaNodeProperties, "measureFunc"> = {
 const properties = Object.keys(testValues) as Array<keyof typeof testValues>
 
 describe("set & get properties", () => {
-    const node = new FlexNode()
+    const node = new FlexNode(1)
 
     const rawValues: any = {}
 
     it("it should throw an error", () => {
-        expect(() => node.getProperty(1, "measureFunc"), "can't get the measureFunc back").to.throw(
+        expect(() => node.getProperty("measureFunc"), "can't get the measureFunc back").to.throw(
             `getProperty "measureFunc" is not possible`
         )
 
-        expect(() => node.setProperty(1, "alignItems", "centerx" as any), "assign alignItems a unkown value").to.throw(
+        expect(() => node.setProperty("alignItems", "centerx" as any), "assign alignItems a unkown value").to.throw(
             `unkown value "centerx" for property "alignItems"`
         )
 
-        expect(() => node.setProperty(1, "alignItems", 1 as any), "assign alignItems a wrong value type").to.throw(
+        expect(() => node.setProperty("alignItems", 1 as any), "assign alignItems a wrong value type").to.throw(
             `"1" is not a valid value for "alignItems", expected a string`
         )
 
         expect(
-            () => node.setProperty(1, "width", 0.5),
+            () => node.setProperty("width", 0.5),
             "assign width a value that is not representable with the precision"
         ).to.throw(`bad/low precision "1"; the preicion must devide the values without rest`)
 
-        expect(() => node.setProperty(1, "alignItemsy" as any, "centerx"), "set a unkown property").to.throw(
+        expect(() => node.setProperty("alignItemsy" as any, "centerx"), "set a unkown property").to.throw(
             `property "alignItemsy" is not exisiting`
         )
 
@@ -76,7 +76,7 @@ describe("set & get properties", () => {
             `can't retranslate value "abc" of property "alignContent"`
         )
 
-        expect(() => node.getComputed(0.01, "borderx" as any)).to.throw(`layout value "borderx" is not exisiting`)
+        expect(() => node.getComputed("borderx" as any)).to.throw(`layout value "borderx" is not exisiting`)
     })
 
     //get raw vaues
@@ -84,28 +84,26 @@ describe("set & get properties", () => {
 
     it("it should get the default values", () => {
         properties.forEach((property) =>
-            expect(node.getProperty(1, property), `get default for ${property}`).to.equal(
+            expect(node.getProperty(property), `get default for ${property}`).to.equal(
                 nodeDefaults[property as keyof typeof nodeDefaults]
             )
         )
     })
 
     it("it should set new values", () => {
-        node.setProperty(1, "measureFunc", () => ({ width: 0, height: 0 }))
+        node.setProperty("measureFunc", () => ({ width: 0, height: 0 }))
         ;(Object.entries(testValues) as Array<[keyof YogaNodeProperties, any]>).forEach(([name, value]) =>
-            node.setProperty(1, name, value)
+            node.setProperty(name, value)
         )
         properties.forEach((property) =>
-            expect(node.getProperty(1, property), `compare ${property} to expected value`).to.equal(
-                testValues[property]
-            )
+            expect(node.getProperty(property), `compare ${property} to expected value`).to.equal(testValues[property])
         )
     })
 
     it("it should reset all values", () => {
-        node.setProperty(1, "measureFunc", undefined)
+        node.setProperty("measureFunc", undefined)
         ;(Object.keys(testValues) as Array<keyof YogaNodeProperties>).forEach((name) =>
-            node.setProperty(1, name, undefined)
+            node.setProperty(name, undefined)
         )
         properties.forEach(
             (property) =>
@@ -118,10 +116,10 @@ describe("set & get properties", () => {
 })
 
 describe("add, remove & reorder children & layout", () => {
-    const parent = new FlexNode()
-    const child1 = new FlexNode()
-    const child2 = new FlexNode()
-    const child3 = new FlexNode()
+    const parent = new FlexNode(0.01)
+    const child1 = new FlexNode(0.01)
+    const child2 = new FlexNode(0.01)
+    const child3 = new FlexNode(0.01)
 
     it("add children in order", () => {
         child1.index = 0
@@ -130,14 +128,14 @@ describe("add, remove & reorder children & layout", () => {
         parent.insertChild(child2)
         parent.insertChild(child1)
         parent.commitChanges()
-        child1.setProperty(0.01, "flexGrow", 1)
-        child2.setProperty(0.01, "flexGrow", 1)
+        child1.setProperty("flexGrow", 1)
+        child2.setProperty("flexGrow", 1)
         //TODO:
         parent["node"].calculateLayout(100, 100, FLEX_DIRECTION_COLUMN)
-        expect(child1.getComputed(0.01, "top"), "child 1 top").to.equal(0)
-        expect(child1.getComputed(0.01, "height"), "child 1 height").to.equal(0.5)
-        expect(child2.getComputed(0.01, "top"), "child 2 top").to.equal(0.5)
-        expect(child2.getComputed(0.01, "height"), "child 2 height").to.equal(0.5)
+        expect(child1.getComputed("top"), "child 1 top").to.equal(0)
+        expect(child1.getComputed("height"), "child 1 height").to.equal(0.5)
+        expect(child2.getComputed("top"), "child 2 top").to.equal(0.5)
+        expect(child2.getComputed("height"), "child 2 height").to.equal(0.5)
     })
 
     it("change children order", () => {
@@ -146,20 +144,20 @@ describe("add, remove & reorder children & layout", () => {
         parent.commitChanges()
         //TODO:
         parent["node"].calculateLayout(100, 100, FLEX_DIRECTION_COLUMN)
-        expect(child1.getComputed(0.01, "top"), "child 1 top").to.equal(0.5)
-        expect(child1.getComputed(0.01, "height"), "child 1 height").to.equal(0.5)
-        expect(child2.getComputed(0.01, "top"), "child 2 top").to.equal(0)
-        expect(child2.getComputed(0.01, "height"), "child 2 height").to.equal(0.5)
+        expect(child1.getComputed("top"), "child 1 top").to.equal(0.5)
+        expect(child1.getComputed("height"), "child 1 height").to.equal(0.5)
+        expect(child2.getComputed("top"), "child 2 top").to.equal(0)
+        expect(child2.getComputed("height"), "child 2 height").to.equal(0.5)
     })
 
     it("change nothing", () => {
         parent.commitChanges()
         //TODO:
         parent["node"].calculateLayout(100, 100, FLEX_DIRECTION_COLUMN)
-        expect(child1.getComputed(0.01, "top"), "child 1 top").to.equal(0.5)
-        expect(child1.getComputed(0.01, "height"), "child 1 height").to.equal(0.5)
-        expect(child2.getComputed(0.01, "top"), "child 2 top").to.equal(0)
-        expect(child2.getComputed(0.01, "height"), "child 2 height").to.equal(0.5)
+        expect(child1.getComputed("top"), "child 1 top").to.equal(0.5)
+        expect(child1.getComputed("height"), "child 1 height").to.equal(0.5)
+        expect(child2.getComputed("top"), "child 2 top").to.equal(0)
+        expect(child2.getComputed("height"), "child 2 height").to.equal(0.5)
     })
 
     it("remove & destroy child", () => {
@@ -168,8 +166,8 @@ describe("add, remove & reorder children & layout", () => {
         parent.commitChanges()
         //TODO:
         parent["node"].calculateLayout(100, 100, FLEX_DIRECTION_COLUMN)
-        expect(child1.getComputed(0.01, "top"), "child 1 top").to.equal(0)
-        expect(child1.getComputed(0.01, "height"), "child 1 height").to.equal(1)
+        expect(child1.getComputed("top"), "child 1 top").to.equal(0)
+        expect(child1.getComputed("height"), "child 1 height").to.equal(1)
     })
 })
 

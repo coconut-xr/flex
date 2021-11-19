@@ -36,4 +36,4 @@ propertyNamesWithFnNames.forEach(([propertyName, fnName]) => {
     }
 })
 
-writeFileSync("src/node-defaults.ts", `export default ${JSON.stringify(result).replace(/null/g, "NaN")}`)
+writeFileSync("src/property-map.ts", `export default ${JSON.stringify(result)}`)

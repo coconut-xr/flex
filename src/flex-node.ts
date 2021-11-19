@@ -23,7 +23,7 @@ export class FlexNode {
     private commitedChildren: Array<FlexNode> = []
     public index: number = 0
 
-    constructor() {
+    constructor(private readonly precision: number) {
         this.node = Node.create()
     }
 
@@ -57,28 +57,20 @@ export class FlexNode {
         }
     }
 
-    getComputed<Key extends LayoutKeys>(
-        precision: number,
-        key: Key,
-        ...params: GetParams<YogaNode, `getComputed${Capitalize<Key>}`>
-    ) {
+    getComputed<Key extends LayoutKeys>(key: Key, ...params: GetParams<YogaNode, `getComputed${Capitalize<Key>}`>) {
         const func: Function = this.node[`getComputed${capitalize(key)}`]
         if (func == null) {
             throw `layout value "${key}" is not exisiting`
         }
-        return func.call(this.node, ...params) * precision
+        return func.call(this.node, ...params) * this.precision
     }
 
-    setProperty<Name extends keyof YogaNodeProperties>(
-        precision: number,
-        name: Name,
-        value: YogaNodeProperties[Name]
-    ): void {
+    setProperty<Name extends keyof YogaNodeProperties>(name: Name, value: YogaNodeProperties[Name]): void {
         if (value == null && name === "measureFunc") {
             this.node.unsetMeasureFunc()
             return
         }
-        this.setRawProperty(name, toYoga(precision, name, value))
+        this.setRawProperty(name, toYoga(this.precision, name, value))
     }
 
     private callNodeFunction<Prefix extends "get" | "set", Name extends keyof YogaNodeProperties>(
@@ -104,8 +96,8 @@ export class FlexNode {
 
     private setRawProperty = this.callNodeFunction.bind(this, "set")
 
-    getProperty<Name extends keyof YogaNodeProperties>(precision: number, name: Name): YogaNodeProperties[Name] {
-        return fromYoga(precision, name, this.getRawProperty(name))
+    getProperty<Name extends keyof YogaNodeProperties>(name: Name): YogaNodeProperties[Name] {
+        return fromYoga(this.precision, name, this.getRawProperty(name))
     }
 
     private getRawProperty = this.callNodeFunction.bind(this, "get")
