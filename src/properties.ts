@@ -77,7 +77,7 @@ export function toYoga(precision: number, name: string, value: any): any {
         //point value
         const number = value / precision
         if (!Number.isInteger(number)) {
-            throw `bad precision ${precision}; the preicion must devide integers without rest`
+            throw `bad/low precision "${precision}"; the preicion must devide the values without rest`
         }
         return number
     }
@@ -109,7 +109,7 @@ export function fromYoga(precision: number, name: string, value: any): any {
                 value = undefined
                 break
             default:
-                throw `can't convert value "${value}" for property "${name}" from yoga`
+                throw `can't convert value "${JSON.stringify(value)}" for property "${name}" from yoga`
         }
     }
 

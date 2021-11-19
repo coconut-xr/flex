@@ -20,6 +20,7 @@ export type LayoutKeys = Uncapitalize<FilterGetComputed<YogaNode, keyof YogaNode
 export class FlexNode {
     private readonly node: YogaNode
     private readonly children: Array<FlexNode> = []
+    private commitedChildren: Array<FlexNode> = []
     public index: number = 0
 
     constructor() {
@@ -32,18 +33,17 @@ export class FlexNode {
 
     commitChanges() {
         this.children.sort((a, b) => a.index - b.index)
-        for (let i = 0; i < this.children.length; i++) {
-            const oldChild = this.node.getChild(i)
-            const correctChild = this.children[i].node
+        for (let i = 0; i < Math.max(this.children.length, this.commitedChildren.length); i++) {
+            const oldChild = this.commitedChildren[i]
+            const correctChild = this.children[i]
             if (oldChild != correctChild) {
-                console.log("change " + i) //TODO: this is called even when nothing has changed???
-                if (oldChild != null) {
-                    this.node.removeChild(oldChild)
+                if (correctChild != null) {
+                    this.node.removeChild(correctChild.node)
+                    this.node.insertChild(correctChild.node, i)
                 }
-                this.node.removeChild(correctChild)
-                this.node.insertChild(correctChild, i)
             }
         }
+        this.commitedChildren = [...this.children]
     }
 
     insertChild(node: FlexNode): void {

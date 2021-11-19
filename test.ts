@@ -1,6 +1,6 @@
 import { expect } from "chai"
 import { FLEX_DIRECTION_COLUMN } from "yoga-layout-prebuilt"
-import { FlexNode, YogaNodeProperties } from "./src"
+import { FlexNode, fromYoga, YogaNodeProperties } from "./src"
 import nodeDefaults from "./src/node-defaults"
 
 const testValues: Omit<YogaNodeProperties, "measureFunc"> = {
@@ -57,8 +57,23 @@ describe("set & get properties", () => {
             `unkown value "centerx" for property "alignItems"`
         )
 
+        expect(() => node.setProperty(1, "alignItems", 1 as any), "assign alignItems a wrong value type").to.throw(
+            `"1" is not a valid value for "alignItems", expected a string`
+        )
+
+        expect(
+            () => node.setProperty(1, "width", 0.5),
+            "assign width a value that is not representable with the precision"
+        ).to.throw(`bad/low precision "1"; the preicion must devide the values without rest`)
+
         expect(() => node.setProperty(1, "alignItemsy" as any, "centerx"), "set a unkown property").to.throw(
             `property "alignItemsy" is not exisiting`
+        )
+
+        expect(() => fromYoga(1, "test", {})).to.throw(`can't convert value "{}" for property "test" from yoga`)
+
+        expect(() => fromYoga(1, "alignContent", "abc")).to.throw(
+            `can't retranslate value "abc" of property "alignContent"`
         )
 
         expect(() => node.getComputed(0.01, "borderx" as any)).to.throw(`layout value "borderx" is not exisiting`)
@@ -106,10 +121,12 @@ describe("add, remove & reorder children & layout", () => {
     const parent = new FlexNode()
     const child1 = new FlexNode()
     const child2 = new FlexNode()
+    const child3 = new FlexNode()
 
     it("add children in order", () => {
         child1.index = 0
         child2.index = 1
+        expect(() => parent.removeChild(child3)).to.not.throw()
         parent.insertChild(child2)
         parent.insertChild(child1)
         parent.commitChanges()
