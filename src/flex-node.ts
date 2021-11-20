@@ -22,9 +22,9 @@ export type YogaNodeProperties = {
         ? keyof PropertyMap[Key]["enumMap"]
         :
               | number
-              | (PropertyMap[Key] extends { auto: true } ? "auto" : never)
+              | (PropertyMap[Key] extends { autoUnit: true } ? "auto" : never)
               | (PropertyMap[Key] extends {
-                    percentage: true
+                    percentUnit: true
                 }
                     ? `${number}%`
                     : never)

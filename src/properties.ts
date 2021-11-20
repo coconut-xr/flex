@@ -9,8 +9,9 @@ export type PropertyInformation =
     | {
           type: "value"
           default: number | "auto" | null
-          percentage: boolean
-          auto: boolean
+          pointUnit: boolean
+          percentUnit: boolean
+          autoUnit: boolean
       }
 
 export function toYoga(precision: number, propertyInformation: PropertyInformation, name: string, value: any): any {
@@ -31,7 +32,7 @@ export function toYoga(precision: number, propertyInformation: PropertyInformati
         return constant
     }
 
-    if (typeof value === "number") {
+    if (typeof value === "number" && propertyInformation.pointUnit) {
         //point value
         const number = value / precision
         if (!Number.isInteger(number)) {
@@ -44,7 +45,7 @@ export function toYoga(precision: number, propertyInformation: PropertyInformati
         return NaN
     }
 
-    //string value (percentage / auto)
+    //number / percent / auto
     return value
 }
 
@@ -81,10 +82,12 @@ export function fromYoga(precision: number, propertyInformation: PropertyInforma
     }
 
     if (typeof value === "number") {
-        //point value
-        return isNaN(value) ? null : value * precision
+        if (isNaN(value)) {
+            return null
+        }
+        return propertyInformation.pointUnit ? value * precision : value
     }
 
-    //string value (percentage / auto / null)
+    //string value (percent / auto / null)
     return value
 }

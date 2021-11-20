@@ -5,6 +5,7 @@ import { fromYoga } from "../src/properties"
 const node = Node.create()
 
 const propertiesWithEdge = new Set(["border", "padding", "margin", "position"])
+const propertiesWithoutPointUnit = new Set(["aspectRatio", "flexGrow", "flexShrink"])
 
 const enumsToPrefix: { [key in string]: string } = {
     alignContent: "ALIGN_",
@@ -17,6 +18,7 @@ const enumsToPrefix: { [key in string]: string } = {
     overflow: "OVERFLOW_",
     positionType: "POSITION_TYPE_",
 }
+
 const edgeMap = {
     Top: EDGE_TOP,
     Left: EDGE_LEFT,
@@ -63,8 +65,9 @@ const result = Object.keys(Object.getPrototypeOf(node))
             propertyInfo = {
                 type: "value",
                 functionName,
-                percentage: node[`set${functionName}Percent` as unknown as keyof typeof node] != null,
-                auto: node[`set${functionName}Auto` as unknown as keyof typeof node] != null,
+                percentUnit: node[`set${functionName}Percent` as unknown as keyof typeof node] != null,
+                autoUnit: node[`set${functionName}Auto` as unknown as keyof typeof node] != null,
+                pointUnit: !propertiesWithoutPointUnit.has(propertyName),
             }
         }
         if (propertiesWithEdge.has(propertyName)) {

@@ -171,6 +171,13 @@ describe("add, remove & reorder children & layout", () => {
         expect(child1.getComputed("top"), "child 1 top").to.equal(0)
         expect(child1.getComputed("height"), "child 1 height").to.equal(0.5)
     })
+
+    it("use absolute value", () => {
+        child1.setProperty("height", 0.33)
+        parent.calculateLayout()
+        expect(child1.getComputed("top"), "child 1 top").to.equal(0)
+        expect(child1.getComputed("height"), "child 1 height").to.equal(0.33)
+    })
 })
 
 function equal(val1: any, val2: any) {
