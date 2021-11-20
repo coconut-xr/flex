@@ -135,6 +135,7 @@ describe("add, remove & reorder children & layout", () => {
         expect(child1.getComputed("height"), "child 1 height").to.equal(0.5)
         expect(child2.getComputed("top"), "child 2 top").to.equal(0.5)
         expect(child2.getComputed("height"), "child 2 height").to.equal(0.5)
+        expect(parent["node"].getChildCount()).to.equal(2)
     })
 
     it("change children order", () => {
@@ -145,6 +146,7 @@ describe("add, remove & reorder children & layout", () => {
         expect(child1.getComputed("height"), "child 1 height").to.equal(0.5)
         expect(child2.getComputed("top"), "child 2 top").to.equal(0)
         expect(child2.getComputed("height"), "child 2 height").to.equal(0.5)
+        expect(parent["node"].getChildCount()).to.equal(2)
     })
 
     it("change nothing", () => {
@@ -153,15 +155,17 @@ describe("add, remove & reorder children & layout", () => {
         expect(child1.getComputed("height"), "child 1 height").to.equal(0.5)
         expect(child2.getComputed("top"), "child 2 top").to.equal(0)
         expect(child2.getComputed("height"), "child 2 height").to.equal(0.5)
+        expect(parent["node"].getChildCount()).to.equal(2)
     })
 
     it("remove & destroy child", () => {
         parent.removeChild(child2)
-        child2.destroy()
         parent.setProperty("height", 2)
         parent.calculateLayout()
         expect(child1.getComputed("top"), "child 1 top").to.equal(0)
         expect(child1.getComputed("height"), "child 1 height").to.equal(2)
+        expect(parent["node"].getChildCount()).to.equal(1)
+        child2.destroy()
     })
 
     it("use percentage", () => {
@@ -170,6 +174,7 @@ describe("add, remove & reorder children & layout", () => {
         parent.calculateLayout()
         expect(child1.getComputed("top"), "child 1 top").to.equal(0)
         expect(child1.getComputed("height"), "child 1 height").to.equal(0.5)
+        expect(parent["node"].getChildCount()).to.equal(1)
     })
 
     it("use absolute value", () => {
@@ -177,6 +182,7 @@ describe("add, remove & reorder children & layout", () => {
         parent.calculateLayout()
         expect(child1.getComputed("top"), "child 1 top").to.equal(0)
         expect(child1.getComputed("height"), "child 1 height").to.equal(0.33)
+        expect(parent["node"].getChildCount()).to.equal(1)
     })
 })
 

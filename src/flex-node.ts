@@ -46,7 +46,7 @@ export class FlexNode {
         this.node.free()
     }
 
-    calculateLayout() {
+    private commitChildren(): void {
         this.children.sort((a, b) => a.index - b.index)
         for (let i = 0; i < Math.max(this.children.length, this.commitedChildren.length); i++) {
             const oldChild = this.commitedChildren[i]
@@ -55,10 +55,17 @@ export class FlexNode {
                 if (correctChild != null) {
                     this.node.removeChild(correctChild.node)
                     this.node.insertChild(correctChild.node, i)
+                } else {
+                    this.node.removeChild(this.node.getChild(i))
                 }
             }
         }
         this.commitedChildren = [...this.children]
+        this.commitedChildren.forEach((child) => child.commitChildren())
+    }
+
+    calculateLayout() {
+        this.commitChildren()
         this.node.calculateLayout()
     }
 
