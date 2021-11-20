@@ -33,12 +33,12 @@ export type YogaNodeProperties = {
 }
 
 export class FlexNode {
-    private readonly node: YogaNode
-    private readonly children: Array<FlexNode> = []
-    private commitedChildren: Array<FlexNode> = []
+    protected readonly node: YogaNode
+    protected readonly children: Array<FlexNode> = []
+    protected commitedChildren: Array<FlexNode> = []
     public index = 0
 
-    constructor(private readonly precision: number) {
+    constructor(protected readonly precision: number) {
         this.node = Node.create()
     }
 
@@ -97,7 +97,7 @@ export class FlexNode {
         }
     }
 
-    private callNodeFunction<Prefix extends "get" | "set", Name extends keyof typeof propertyMap>(
+    protected callNodeFunction<Prefix extends "get" | "set", Name extends keyof typeof propertyMap>(
         prefix: Prefix,
         propertyInformation: typeof propertyMap[Name],
         ...params: Array<any>
