@@ -18,23 +18,16 @@
     },
     "scripts": {
         "test": "nyc mocha -r ts-node/register ./test.ts",
-        "generate": "run-p enum-lookups defaults",
-        "enum-lookups": "run-s enum-lookups:generate enum-lookups:fix",
-        "enum-lookups:generate": "ts-node scripts/generate-enum-lookups.ts ",
-        "enum-lookups:fix": "prettier --write src/enum-lookups.ts",
-        "defaults": "run-s defaults:generate defaults:fix",
-        "defaults:generate": "ts-node scripts/generate-defaults.ts ",
-        "defaults:fix": "prettier --write src/node-defaults.ts",
-        "build": "tsc",
+        "property-map": "run-s property-map:generate property-map:fix",
+        "property-map:generate": "ts-node scripts/generate-property-map.ts ",
+        "property-map:fix": "prettier --write src/property-map.ts",
+        "build": "tsc --p build.tsconfig.json",
         "check": "run-s check:prettier check:eslint",
         "check:prettier": "prettier --check src/**/*.{ts,tsx}",
         "check:eslint": "eslint src",
         "fix": "run-s fix:prettier fix:eslint",
         "fix:prettier": "prettier --write src/**/*.{ts,tsx}",
         "fix:eslint": "eslint src --fix"
-    },
-    "peerDependencies": {
-        "react": "^17.0.2"
     },
     "dependencies": {
         "yoga-layout-prebuilt": "^1.10.0"
@@ -43,7 +36,8 @@
         "@types/chai": "^4.2.22",
         "@types/mocha": "^9.0.0",
         "@types/node": "^16.11.7",
-        "@types/react": "^17.0.34",
+        "@typescript-eslint/eslint-plugin": "^5.4.0",
+        "@typescript-eslint/parser": "^5.4.0",
         "chai": "^4.3.4",
         "eslint": "^8.2.0",
         "mocha": "^9.1.3",

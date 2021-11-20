@@ -1,12 +1,10 @@
 import { expect } from "chai"
-import { FLEX_DIRECTION_COLUMN } from "yoga-layout-prebuilt"
-import { FlexNode, fromYoga, YogaNodeProperties } from "./src"
-import nodeDefaults from "./src/node-defaults"
+import { propertyMap, FlexNode, fromYoga, YogaNodeProperties } from "./src"
 
 const testValues: Omit<YogaNodeProperties, "measureFunc"> = {
     alignContent: "center",
-    alignItems: "flexEnd",
-    alignSelf: "spaceAround",
+    alignItems: "flex-end",
+    alignSelf: "space-around",
     aspectRatio: 2,
     borderBottom: 3,
     borderLeft: 4,
@@ -14,12 +12,12 @@ const testValues: Omit<YogaNodeProperties, "measureFunc"> = {
     borderTop: 6,
     display: "none",
     flexBasis: 7,
-    flexDirection: "rowReverse",
+    flexDirection: "row-reverse",
     flexGrow: 8,
     flexShrink: 9,
-    flexWrap: "wrapReverse",
+    flexWrap: "wrap-reverse",
     height: 10,
-    justifyContent: "spaceEvenly",
+    justifyContent: "space-evenly",
     marginBottom: 11,
     marginLeft: 12,
     marginRight: 13,
@@ -49,10 +47,6 @@ describe("set & get properties", () => {
     const rawValues: any = {}
 
     it("it should throw an error", () => {
-        expect(() => node.getProperty("measureFunc"), "can't get the measureFunc back").to.throw(
-            `getProperty "measureFunc" is not possible`
-        )
-
         expect(() => node.setProperty("alignItems", "centerx" as any), "assign alignItems a unkown value").to.throw(
             `unkown value "centerx" for property "alignItems"`
         )
@@ -66,13 +60,17 @@ describe("set & get properties", () => {
             "assign width a value that is not representable with the precision"
         ).to.throw(`bad/low precision "1"; the preicion must devide the values without rest`)
 
+        expect(() => node.getProperty("abc" as any), "get a unkown property").to.throw(`unkown property "abc"`)
+
         expect(() => node.setProperty("alignItemsy" as any, "centerx"), "set a unkown property").to.throw(
-            `property "alignItemsy" is not exisiting`
+            `unkown property "alignItemsy"`
         )
 
-        expect(() => fromYoga(1, "test", {})).to.throw(`can't convert value "{}" for property "test" from yoga`)
+        expect(() => fromYoga(1, propertyMap["alignContent"], "test", {})).to.throw(
+            `can't convert value "{}" for property "test" from yoga`
+        )
 
-        expect(() => fromYoga(1, "alignContent", "abc")).to.throw(
+        expect(() => fromYoga(1, propertyMap["alignContent"], "alignContent", "abc")).to.throw(
             `can't retranslate value "abc" of property "alignContent"`
         )
 
@@ -80,12 +78,14 @@ describe("set & get properties", () => {
     })
 
     //get raw vaues
-    properties.forEach((property) => (rawValues[property] = flatten(node["getRawProperty"](property))))
+    properties.forEach(
+        (property) => (rawValues[property] = flatten(node["callNodeFunction"]("get", propertyMap[property])))
+    )
 
     it("it should get the default values", () => {
         properties.forEach((property) =>
             expect(node.getProperty(property), `get default for ${property}`).to.equal(
-                nodeDefaults[property as keyof typeof nodeDefaults]
+                propertyMap[property as keyof typeof propertyMap].default
             )
         )
     })
@@ -108,7 +108,7 @@ describe("set & get properties", () => {
         properties.forEach(
             (property) =>
                 expect(
-                    equal(flatten(node["getRawProperty"](property)), rawValues[property]),
+                    equal(flatten(node["callNodeFunction"]("get", propertyMap[property])), rawValues[property]),
                     `compare ${property} to the default value`
                 ).to.be.true
         )
@@ -127,11 +127,10 @@ describe("add, remove & reorder children & layout", () => {
         expect(() => parent.removeChild(child3)).to.not.throw()
         parent.insertChild(child2)
         parent.insertChild(child1)
-        parent.commitChanges()
         child1.setProperty("flexGrow", 1)
         child2.setProperty("flexGrow", 1)
-        //TODO:
-        parent["node"].calculateLayout(100, 100, FLEX_DIRECTION_COLUMN)
+        parent.setProperty("height", 1)
+        parent.calculateLayout()
         expect(child1.getComputed("top"), "child 1 top").to.equal(0)
         expect(child1.getComputed("height"), "child 1 height").to.equal(0.5)
         expect(child2.getComputed("top"), "child 2 top").to.equal(0.5)
@@ -141,9 +140,7 @@ describe("add, remove & reorder children & layout", () => {
     it("change children order", () => {
         child1.index = 1
         child2.index = 0
-        parent.commitChanges()
-        //TODO:
-        parent["node"].calculateLayout(100, 100, FLEX_DIRECTION_COLUMN)
+        parent.calculateLayout()
         expect(child1.getComputed("top"), "child 1 top").to.equal(0.5)
         expect(child1.getComputed("height"), "child 1 height").to.equal(0.5)
         expect(child2.getComputed("top"), "child 2 top").to.equal(0)
@@ -151,9 +148,7 @@ describe("add, remove & reorder children & layout", () => {
     })
 
     it("change nothing", () => {
-        parent.commitChanges()
-        //TODO:
-        parent["node"].calculateLayout(100, 100, FLEX_DIRECTION_COLUMN)
+        parent.calculateLayout()
         expect(child1.getComputed("top"), "child 1 top").to.equal(0.5)
         expect(child1.getComputed("height"), "child 1 height").to.equal(0.5)
         expect(child2.getComputed("top"), "child 2 top").to.equal(0)
@@ -163,11 +158,18 @@ describe("add, remove & reorder children & layout", () => {
     it("remove & destroy child", () => {
         parent.removeChild(child2)
         child2.destroy()
-        parent.commitChanges()
-        //TODO:
-        parent["node"].calculateLayout(100, 100, FLEX_DIRECTION_COLUMN)
+        parent.setProperty("height", 2)
+        parent.calculateLayout()
         expect(child1.getComputed("top"), "child 1 top").to.equal(0)
-        expect(child1.getComputed("height"), "child 1 height").to.equal(1)
+        expect(child1.getComputed("height"), "child 1 height").to.equal(2)
+    })
+
+    it("use percentage", () => {
+        child1.setProperty("flexGrow", 0)
+        child1.setProperty("height", "25%")
+        parent.calculateLayout()
+        expect(child1.getComputed("top"), "child 1 top").to.equal(0)
+        expect(child1.getComputed("height"), "child 1 height").to.equal(0.5)
     })
 })
 

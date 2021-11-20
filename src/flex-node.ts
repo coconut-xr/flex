@@ -1,7 +1,5 @@
 import { YogaNode, Node, YogaEdge } from "yoga-layout-prebuilt"
-import { edgeToConstant, fromYoga, RemoveEdge, toYoga, YogaNodeProperties } from "."
-
-const edgeRegex = /^(.+)(Top|Bottom|Left|Right)$/
+import { fromYoga, toYoga, propertyMap } from "."
 
 type FilterGetComputed<T, Name extends keyof T> = Name extends `getComputed${infer PropertyName}`
     ? T[Name] extends (...args: Array<any>) => number
@@ -9,7 +7,7 @@ type FilterGetComputed<T, Name extends keyof T> = Name extends `getComputed${inf
         : never
     : never
 
-export type GetParams<T, Key extends keyof T> = T[Key] extends (...args: infer Params) => number
+export type GetEdgeParams<T> = T extends (...args: infer Params) => number
     ? Params extends []
         ? []
         : [edge: YogaEdge]
@@ -17,11 +15,28 @@ export type GetParams<T, Key extends keyof T> = T[Key] extends (...args: infer P
 
 export type LayoutKeys = Uncapitalize<FilterGetComputed<YogaNode, keyof YogaNode>>
 
+type PropertyMap = typeof propertyMap
+
+export type YogaNodeProperties = {
+    [Key in keyof PropertyMap]?: PropertyMap[Key] extends { type: "enum"; enumMap: object }
+        ? keyof PropertyMap[Key]["enumMap"]
+        :
+              | number
+              | (PropertyMap[Key] extends { auto: true } ? "auto" : never)
+              | (PropertyMap[Key] extends {
+                    percentage: true
+                }
+                    ? `${number}%`
+                    : never)
+} & {
+    measureFunc?: YogaNode["setMeasureFunc"] extends (args: infer Param) => any ? Param : never
+}
+
 export class FlexNode {
     private readonly node: YogaNode
     private readonly children: Array<FlexNode> = []
     private commitedChildren: Array<FlexNode> = []
-    public index: number = 0
+    public index = 0
 
     constructor(private readonly precision: number) {
         this.node = Node.create()
@@ -31,7 +46,7 @@ export class FlexNode {
         this.node.free()
     }
 
-    commitChanges() {
+    calculateLayout() {
         this.children.sort((a, b) => a.index - b.index)
         for (let i = 0; i < Math.max(this.children.length, this.commitedChildren.length); i++) {
             const oldChild = this.commitedChildren[i]
@@ -44,6 +59,7 @@ export class FlexNode {
             }
         }
         this.commitedChildren = [...this.children]
+        this.node.calculateLayout()
     }
 
     insertChild(node: FlexNode): void {
@@ -57,8 +73,8 @@ export class FlexNode {
         }
     }
 
-    getComputed<Key extends LayoutKeys>(key: Key, ...params: GetParams<YogaNode, `getComputed${Capitalize<Key>}`>) {
-        const func: Function = this.node[`getComputed${capitalize(key)}`]
+    getComputed<Key extends LayoutKeys>(key: Key, ...params: GetEdgeParams<YogaNode[`getComputed${Capitalize<Key>}`]>) {
+        const func: (...params: Array<any>) => any = this.node[`getComputed${capitalize(key)}`]
         if (func == null) {
             throw `layout value "${key}" is not exisiting`
         }
@@ -66,43 +82,47 @@ export class FlexNode {
     }
 
     setProperty<Name extends keyof YogaNodeProperties>(name: Name, value: YogaNodeProperties[Name]): void {
-        if (value == null && name === "measureFunc") {
-            this.node.unsetMeasureFunc()
+        if (isMeasureFunc(name)) {
+            const propertyInfo = propertyMap[name]
+            if (propertyInfo == null) {
+                throw `unkown property "${name}"`
+            }
+            this.callNodeFunction("set", propertyInfo, toYoga(this.precision, propertyInfo, name, value))
             return
         }
-        this.setRawProperty(name, toYoga(this.precision, name, value))
+        if (value == null) {
+            this.node.unsetMeasureFunc()
+        } else {
+            this.node.setMeasureFunc(value as any)
+        }
     }
 
-    private callNodeFunction<Prefix extends "get" | "set", Name extends keyof YogaNodeProperties>(
+    private callNodeFunction<Prefix extends "get" | "set", Name extends keyof typeof propertyMap>(
         prefix: Prefix,
-        name: Name,
+        propertyInformation: typeof propertyMap[Name],
         ...params: Array<any>
     ) {
-        const edgeMatch = edgeRegex.exec(name)
-        const key = (edgeMatch == null ? name : edgeMatch[1]) as RemoveEdge<Name>
-        const edgeProperties = edgeMatch == null ? [] : [edgeToConstant[edgeMatch[2] as keyof typeof edgeToConstant]]
-        if (key == "measureFunc" && prefix === "get") {
-            throw `getProperty "measureFunc" is not possible`
+        const func: (...params: Array<any>) => any = this.node[`${prefix}${propertyInformation.functionName}`]
+        if ("edge" in propertyInformation) {
+            return func.call(this.node, propertyInformation.edge, ...params)
+        } else {
+            return func.call(this.node, ...params)
         }
-        const fnName: `${Prefix}${Capitalize<Exclude<RemoveEdge<Name>, "measureFunc">>}` = `${prefix}${capitalize(
-            key as Exclude<typeof key, "measureFunc">
-        )}`
-        const func: Function = this.node[fnName]
-        if (func == null) {
-            throw `property "${name}" is not exisiting`
-        }
-        return func.call(this.node, ...(edgeProperties as []), ...params)
     }
 
-    private setRawProperty = this.callNodeFunction.bind(this, "set")
-
-    getProperty<Name extends keyof YogaNodeProperties>(name: Name): YogaNodeProperties[Name] {
-        return fromYoga(this.precision, name, this.getRawProperty(name))
+    getProperty<Name extends Exclude<keyof YogaNodeProperties, "measureFunc">>(name: Name): YogaNodeProperties[Name] {
+        const propertyInfo = propertyMap[name]
+        if (propertyInfo == null) {
+            throw `unkown property "${name}"`
+        }
+        return fromYoga(this.precision, propertyInfo, name, this.callNodeFunction("get", propertyInfo))
     }
-
-    private getRawProperty = this.callNodeFunction.bind(this, "get")
 }
 
 function capitalize<Key extends string>(key: Key) {
     return `${key.charAt(0).toUpperCase()}${key.slice(1)}` as Capitalize<Key>
+}
+
+function isMeasureFunc(value: keyof YogaNodeProperties): value is Exclude<keyof YogaNodeProperties, "measureFunc"> {
+    return value != "measureFunc"
 }
