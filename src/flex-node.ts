@@ -47,6 +47,7 @@ export class FlexNode {
     }
 
     private commitChildren(): void {
+        const actualChildrenCount = this.node.getChildCount()
         this.children.sort((a, b) => a.index - b.index)
         for (let i = 0; i < Math.max(this.children.length, this.commitedChildren.length); i++) {
             const oldChild = this.commitedChildren[i]
@@ -55,7 +56,7 @@ export class FlexNode {
                 if (correctChild != null) {
                     this.node.removeChild(correctChild.node)
                     this.node.insertChild(correctChild.node, i)
-                } else {
+                } else if (i < actualChildrenCount) {
                     this.node.removeChild(this.node.getChild(i))
                 }
             }

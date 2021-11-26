@@ -158,14 +158,26 @@ describe("add, remove & reorder children & layout", () => {
         expect(parent["node"].getChildCount()).to.equal(2)
     })
 
-    it("remove & destroy child", () => {
+    it("remove child & destroy before commit", () => {
+        child2.destroy()
         parent.removeChild(child2)
         parent.setProperty("height", 2)
         parent.calculateLayout()
         expect(child1.getComputed("top"), "child 1 top").to.equal(0)
         expect(child1.getComputed("height"), "child 1 height").to.equal(2)
         expect(parent["node"].getChildCount()).to.equal(1)
-        child2.destroy()
+    })
+
+    it("remove child & destroy after commit", () => {
+        parent.insertChild(child3)
+        parent.calculateLayout()
+        parent.removeChild(child3)
+        parent.setProperty("height", 2)
+        parent.calculateLayout()
+        expect(child1.getComputed("top"), "child 1 top").to.equal(0)
+        expect(child1.getComputed("height"), "child 1 height").to.equal(2)
+        expect(parent["node"].getChildCount()).to.equal(1)
+        child3.destroy()
     })
 
     it("use percentage", () => {
