@@ -55,11 +55,6 @@ describe("set & get properties", () => {
             `"1" is not a valid value for "alignItems", expected a string`
         )
 
-        expect(
-            () => node.setProperty("width", 0.5),
-            "assign width a value that is not representable with the precision"
-        ).to.throw(`bad/low precision "1"; the preicion must devide the values without rest`)
-
         expect(() => node.getProperty("abc" as any), "get a unkown property").to.throw(`unkown property "abc"`)
 
         expect(() => node.setProperty("alignItemsy" as any, "centerx"), "set a unkown property").to.throw(

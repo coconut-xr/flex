@@ -34,11 +34,7 @@ export function toYoga(precision: number, propertyInformation: PropertyInformati
 
     if (typeof value === "number" && propertyInformation.pointUnit) {
         //point value
-        const number = value / precision
-        if (!Number.isInteger(number)) {
-            throw `bad/low precision "${precision}"; the preicion must devide the values without rest`
-        }
-        return number
+        return Math.round(value / precision)
     }
 
     if (value == null) {
