@@ -42,7 +42,7 @@ const testValues: Omit<YogaNodeProperties, "measureFunc"> = {
 const properties = Object.keys(testValues) as Array<keyof typeof testValues>
 
 describe("set & get properties", () => {
-    const node = new FlexNode(1)
+    const node = new FlexNode(1, undefined)
 
     const rawValues: any = {}
 
@@ -69,7 +69,9 @@ describe("set & get properties", () => {
             `can't retranslate value "abc" of property "alignContent"`
         )
 
-        expect(() => node.getComputed("borderx" as any)).to.throw(`layout value "borderx" is not exisiting`)
+        expect(() => (node as any).getComputed("borderx")).to.throw(
+            `layout value "borderx" is not exisiting`
+        )
     })
 
     //get raw vaues
@@ -111,10 +113,10 @@ describe("set & get properties", () => {
 })
 
 describe("add, remove & reorder children & layout", () => {
-    const parent = new FlexNode(0.01)
-    const child1 = new FlexNode(0.01)
-    const child2 = new FlexNode(0.01)
-    const child3 = new FlexNode(0.01)
+    const parent = new FlexNode(0.01, undefined)
+    const child1 = new FlexNode(0.01, undefined)
+    const child2 = new FlexNode(0.01, undefined)
+    const child3 = new FlexNode(0.01, undefined)
 
     it("add children in order", () => {
         child1.index = 0
