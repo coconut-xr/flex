@@ -144,8 +144,8 @@ function wrapMeasureFunc(func: MeasureFunc, precision: number): MeasureFunc {
             return null
         }
         return {
-            width: width == null ? undefined : Math.round(width / precision),
-            height: height == null ? undefined : Math.round(precision / precision),
+            width: result.width == null ? undefined : Math.round(result.width / precision),
+            height: result.height == null ? undefined : Math.round(result.height / precision),
         }
     }
 }
