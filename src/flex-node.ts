@@ -90,7 +90,7 @@ export class FlexNode<T = unknown> {
     }
 
     setProperty<Name extends keyof YogaNodeProperties>(name: Name, value: YogaNodeProperties[Name]): void {
-        if (isMeasureFunc(name)) {
+        if (isNotMeasureFunc(name)) {
             const propertyInfo = propertyMap[name]
             if (propertyInfo == null) {
                 throw `unkown property "${name}"`
@@ -101,9 +101,7 @@ export class FlexNode<T = unknown> {
         if (value == null) {
             this.node.unsetMeasureFunc()
         } else {
-            this.node.setMeasureFunc((width, wMode, height, hMode) =>
-                (value as any)(width * this.precision, wMode, height * this.precision, hMode)
-            )
+            this.node.setMeasureFunc(wrapMeasureFunc(value as any, this.precision))
         }
     }
 
@@ -133,6 +131,21 @@ function capitalize<Key extends string>(key: Key) {
     return `${key.charAt(0).toUpperCase()}${key.slice(1)}` as Capitalize<Key>
 }
 
-function isMeasureFunc(value: keyof YogaNodeProperties): value is Exclude<keyof YogaNodeProperties, "measureFunc"> {
+function isNotMeasureFunc(value: keyof YogaNodeProperties): value is Exclude<keyof YogaNodeProperties, "measureFunc"> {
     return value != "measureFunc"
+}
+
+type MeasureFunc = YogaNodeProperties["measureFunc"] extends infer Y | undefined ? Y : never
+
+function wrapMeasureFunc(func: MeasureFunc, precision: number): MeasureFunc {
+    return (width, wMode, height, hMode) => {
+        const result = func(width * precision, wMode, height * precision, hMode)
+        if (result == null) {
+            return null
+        }
+        return {
+            width: width == null ? undefined : Math.round(width / precision),
+            height: height == null ? undefined : Math.round(precision / precision),
+        }
+    }
 }
