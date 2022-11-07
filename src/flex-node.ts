@@ -101,7 +101,9 @@ export class FlexNode<T = unknown> {
         if (value == null) {
             this.node.unsetMeasureFunc()
         } else {
-            this.node.setMeasureFunc(value as any)
+            this.node.setMeasureFunc((width, wMode, height, hMode) =>
+                (value as any)(width * this.precision, wMode, height * this.precision, hMode)
+            )
         }
     }
 
