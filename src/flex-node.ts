@@ -102,6 +102,7 @@ export class FlexNode<T = unknown> {
             this.node.unsetMeasureFunc()
         } else {
             this.node.setMeasureFunc(wrapMeasureFunc(value as any, this.precision))
+            this.node.markDirty()
         }
     }
 
@@ -144,8 +145,8 @@ function wrapMeasureFunc(func: MeasureFunc, precision: number): MeasureFunc {
             return null
         }
         return {
-            width: result.width == null ? undefined : Math.round(result.width / precision),
-            height: result.height == null ? undefined : Math.round(result.height / precision),
+            width: result.width == null ? undefined : Math.ceil(result.width / precision),
+            height: result.height == null ? undefined : Math.ceil(result.height / precision),
         }
     }
 }
