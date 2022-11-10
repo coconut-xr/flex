@@ -35,7 +35,6 @@ export type YogaNodeProperties = {
 export class FlexNode<T = unknown> {
     protected readonly node: YogaNode
     protected readonly children: Array<FlexNode> = []
-    protected commitedChildren: Array<FlexNode> = []
     public index = 0
     private shouldBeDestroyed = false
 
@@ -48,22 +47,32 @@ export class FlexNode<T = unknown> {
     }
 
     private commitChildren(): void {
-        const actualChildrenCount = this.node.getChildCount()
         this.children.sort((a, b) => a.index - b.index)
-        for (let i = 0; i < Math.max(this.children.length, this.commitedChildren.length); i++) {
-            const oldChild = this.commitedChildren[i]
-            const correctChild = this.children[i]
-            if (oldChild != correctChild) {
-                if (correctChild != null) {
-                    this.node.removeChild(correctChild.node)
-                    this.node.insertChild(correctChild.node, i)
-                } else if (i < actualChildrenCount) {
-                    this.node.removeChild(this.node.getChild(i))
-                }
+
+        let i = 0
+
+        let oldChildNode: YogaNode | undefined
+        let correctChild: FlexNode | undefined
+        while ((oldChildNode = this.node.getChild(i)) != null || (correctChild = this.children[i]) != null) {
+            if (oldChildNode != null && correctChild != null && yogaNodeEqual(oldChildNode, correctChild.node)) {
+                //unchanged
+                ++i
+                continue
+            }
+
+            if (oldChildNode != null) {
+                this.node.removeChild(oldChildNode)
+            }
+
+            if (correctChild != null) {
+                //insert
+                correctChild!.node.getParent()?.removeChild(correctChild!.node)
+                this.node.insertChild(correctChild!.node, i)
+                ++i
             }
         }
-        this.commitedChildren = [...this.children]
-        this.commitedChildren.forEach((child) => child.commitChildren())
+
+        this.children.forEach((child) => child.commitChildren())
         if (this.shouldBeDestroyed) {
             this.node.free()
         }
@@ -130,6 +139,10 @@ export class FlexNode<T = unknown> {
         }
         return fromYoga(this.precision, propertyInfo, name, this.callNodeFunction("get", propertyInfo))
     }
+}
+
+function yogaNodeEqual(n1: YogaNode, n2: YogaNode): boolean {
+    return (n1 as any)["__nbindPtr"] === (n2 as any)["__nbindPtr"]
 }
 
 function capitalize<Key extends string>(key: Key) {
