@@ -37,13 +37,14 @@ export class FlexNode<T = unknown> {
     protected readonly children: Array<FlexNode> = []
     protected commitedChildren: Array<FlexNode> = []
     public index = 0
+    private shouldBeDestroyed = false
 
     constructor(protected readonly precision: number, public data: T) {
         this.node = Node.create()
     }
 
     destroy(): void {
-        this.node.free()
+        this.shouldBeDestroyed = true
     }
 
     private commitChildren(): void {
@@ -63,6 +64,9 @@ export class FlexNode<T = unknown> {
         }
         this.commitedChildren = [...this.children]
         this.commitedChildren.forEach((child) => child.commitChildren())
+        if (this.shouldBeDestroyed) {
+            this.node.free()
+        }
     }
 
     calculateLayout() {

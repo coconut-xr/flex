@@ -8,3 +8,9 @@
 yoga-layout convenience wrapper
 
 `npm i co-yoga`
+
+# Usage
+
+*Changes to the yoga tree are only made directly before calculateLayout is executed on the root node*
+
+`node.destroy()`, `node.removeChild()`, `and node.insertChild()` will only have an effect after calculateLayout
