@@ -42,7 +42,7 @@ const testValues: Omit<YogaNodeProperties, "measureFunc"> = {
 const properties = Object.keys(testValues) as Array<keyof typeof testValues>
 
 describe("set & get properties", () => {
-    const node = new FlexNode(1, undefined)
+    const node = new FlexNode(1)
 
     const rawValues: any = {}
 
@@ -113,10 +113,10 @@ describe("set & get properties", () => {
 })
 
 describe("add, remove & reorder children & layout", () => {
-    const parent = new FlexNode(0.01, undefined)
-    const child1 = new FlexNode(0.01, undefined)
-    const child2 = new FlexNode(0.01, undefined)
-    const child3 = new FlexNode(0.01, undefined)
+    const parent = new FlexNode(0.01)
+    const child1 = new FlexNode(0.01)
+    const child2 = new FlexNode(0.01)
+    const child3 = new FlexNode(0.01)
 
     it("add children in order", () => {
         child1.index = 0

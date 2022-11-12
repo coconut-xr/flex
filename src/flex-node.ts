@@ -32,13 +32,13 @@ export type YogaNodeProperties = {
     measureFunc?: YogaNode["setMeasureFunc"] extends (args: infer Param) => any ? Param : never
 }
 
-export class FlexNode<T = unknown> {
+export class FlexNode {
     protected readonly node: YogaNode
     protected readonly children: Array<FlexNode> = []
     public index = 0
     private shouldBeDestroyed = false
 
-    constructor(protected readonly precision: number, public data: T) {
+    constructor(protected readonly precision: number) {
         this.node = Node.create()
     }
 
