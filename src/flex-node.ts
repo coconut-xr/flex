@@ -34,7 +34,7 @@ export type YogaNodeProperties = {
 
 export class FlexNode {
     protected readonly node: YogaNode
-    protected readonly children: Array<FlexNode> = []
+    protected readonly children: Array<this> = []
     public index = 0
     private shouldBeDestroyed = false
 
@@ -52,7 +52,7 @@ export class FlexNode {
         let i = 0
 
         let oldChildNode: YogaNode | undefined
-        let correctChild: FlexNode | undefined
+        let correctChild: this | undefined
         while ((oldChildNode = this.node.getChild(i)) != null || (correctChild = this.children[i]) != null) {
             if (oldChildNode != null && correctChild != null && yogaNodeEqual(oldChildNode, correctChild.node)) {
                 //unchanged
@@ -83,11 +83,11 @@ export class FlexNode {
         this.node.calculateLayout()
     }
 
-    insertChild(node: FlexNode): void {
+    insertChild(node: this): void {
         this.children.push(node)
     }
 
-    removeChild(node: FlexNode): void {
+    removeChild(node: this): void {
         const i = this.children.findIndex((n) => n === node)
         if (i != -1) {
             this.children.splice(i, 1)
