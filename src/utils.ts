@@ -108,7 +108,7 @@ export function callNodeFunction<
   }
 }
 
-export function commitChildren(children: Array<YogaNode>, node: YogaNode): void {
+export function commitChildren(node: YogaNode, children: Array<YogaNode>): void {
   let i = 0;
 
   let oldChildNode: YogaNode | undefined;

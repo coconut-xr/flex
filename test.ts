@@ -124,7 +124,7 @@ describe("add, remove & reorder children & layout", () => {
   const child3 = Node.create();
 
   it("add children in order", () => {
-    commitChildren([child1, child2], parent);
+    commitChildren(parent, [child1, child2]);
 
     setProperty(child1, 0.01, "flexGrow", 1);
     setProperty(child2, 0.01, "flexGrow", 1);
@@ -138,7 +138,7 @@ describe("add, remove & reorder children & layout", () => {
   });
 
   it("change children order", () => {
-    commitChildren([child2, child1], parent);
+    commitChildren(parent, [child2, child1]);
 
     parent.calculateLayout();
     expect(child1.getComputedTop() * 0.01, "child 1 top").to.equal(0.5);
@@ -158,7 +158,7 @@ describe("add, remove & reorder children & layout", () => {
   });
 
   it("remove child & destroy before commit", () => {
-    commitChildren([child1], parent);
+    commitChildren(parent, [child1]);
 
     child2.free();
     setProperty(parent, 0.01, "height", 2);
@@ -169,10 +169,10 @@ describe("add, remove & reorder children & layout", () => {
   });
 
   it("remove child & destroy after commit", () => {
-    commitChildren([child1, child3], parent);
+    commitChildren(parent, [child1, child3]);
     parent.calculateLayout();
 
-    commitChildren([child1], parent);
+    commitChildren(parent, [child1]);
     setProperty(parent, 0.01, "height", 2);
     parent.calculateLayout();
     expect(child1.getComputedTop() * 0.01, "child 1 top").to.equal(0);
