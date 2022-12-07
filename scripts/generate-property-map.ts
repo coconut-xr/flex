@@ -1,6 +1,8 @@
-import Yoga, { EDGE_BOTTOM, EDGE_LEFT, EDGE_RIGHT, EDGE_TOP, Node } from "yoga-layout-prebuilt"
+import YogaLayout from "yoga-layout-prebuilt"
 import { writeFileSync } from "fs"
-import { fromYoga } from "../src/properties"
+import { fromYoga } from "../src/properties.js"
+
+const { EDGE_BOTTOM, EDGE_LEFT, EDGE_RIGHT, EDGE_TOP, Node } = YogaLayout
 
 const node = Node.create()
 
@@ -25,7 +27,7 @@ const edgeMap = {
     Right: EDGE_RIGHT,
     Bottom: EDGE_BOTTOM,
 }
-const yogaKeys = Object.entries(Yoga)
+const yogaKeys = Object.entries(YogaLayout)
 
 const kebabCaseFromSnakeCase = (str: string) => str.toLowerCase().replace(/_[a-z]/g, (letter) => `-${letter.slice(1)}`)
 

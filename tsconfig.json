@@ -1,14 +1,19 @@
 {
-    "compilerOptions": {
-        "downlevelIteration": true,
-        "declaration": true,
-        "sourceMap": true,
-        "esModuleInterop": true,
-        "jsx": "react",
-        "strict": true,
-        "target": "ES5",
-        "lib": ["DOM", "ES2018"],
-        "outDir": "dist",
-        "experimentalDecorators": true
-    }
+  "compilerOptions": {
+    "declaration": true,
+    "esModuleInterop": true,
+    "strict": true,
+    "lib": ["ESNext"],
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "NodeNext",
+    "experimentalDecorators": true,
+    "downlevelIteration": true,
+    "skipLibCheck": true,
+    "outDir": "dist"
+  },
+  "ts-node": {
+    "esm": true,
+    "experimentalResolver": true
+  }
 }

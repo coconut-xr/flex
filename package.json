@@ -1,50 +1,53 @@
 {
-    "name": "co-yoga",
-    "version": "1.0.14",
-    "main": "",
-    "description": "yoga-layout convenience wrapper",
-    "homepage": "https://cocoss-org.github.io/co-yoga",
-    "license": "SEE LICENSE IN LICENSE",
-    "author": "Bela Bohlender",
-    "keywords": [
-        "react",
-        "flexbox",
-        "yoga",
-        "typescript"
-    ],
-    "repository": {
-        "type": "git",
-        "url": "git@github.com:cocoss-org/co-yoga.git"
-    },
-    "scripts": {
-        "test": "nyc mocha -r ts-node/register ./test.ts",
-        "property-map": "run-s property-map:generate property-map:fix",
-        "property-map:generate": "ts-node scripts/generate-property-map.ts ",
-        "property-map:fix": "prettier --write src/property-map.ts",
-        "build": "tsc --p build.tsconfig.json",
-        "check": "run-s check:prettier check:eslint",
-        "check:prettier": "prettier --check src/**/*.{ts,tsx}",
-        "check:eslint": "eslint src",
-        "fix": "run-s fix:prettier fix:eslint",
-        "fix:prettier": "prettier --write src/**/*.{ts,tsx}",
-        "fix:eslint": "eslint src --fix"
-    },
-    "dependencies": {
-        "yoga-layout-prebuilt": "^1.10.0"
-    },
-    "devDependencies": {
-        "@types/chai": "^4.3.3",
-        "@types/mocha": "^10.0.0",
-        "@types/node": "^18.11.9",
-        "@typescript-eslint/eslint-plugin": "^5.42.0",
-        "@typescript-eslint/parser": "^5.42.0",
-        "chai": "^4.3.6",
-        "eslint": "^8.26.0",
-        "mocha": "^10.1.0",
-        "npm-run-all": "^4.1.5",
-        "nyc": "^15.1.0",
-        "prettier": "^2.7.1",
-        "ts-node": "^10.9.1",
-        "typescript": "^4.8.4"
-    }
+  "name": "co-yoga",
+  "version": "2.0.0",
+  "main": "dist/index.js",
+  "description": "yoga-layout convenience wrapper",
+  "homepage": "https://cocoss-org.github.io/co-yoga",
+  "license": "SEE LICENSE IN LICENSE",
+  "author": "Bela Bohlender",
+  "keywords": [
+    "react",
+    "flexbox",
+    "yoga",
+    "typescript"
+  ],
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:cocoss-org/co-yoga.git"
+  },
+  "scripts": {
+    "test": "nyc mocha ./test.ts",
+    "property-map": "run-s property-map:generate property-map:fix",
+    "property-map:generate": "ts-node scripts/generate-property-map.ts",
+    "property-map:fix": "prettier --write src/property-map.ts",
+    "build": "tsc --p build.tsconfig.json",
+    "check": "run-s check:prettier check:eslint",
+    "check:prettier": "prettier --check src/**/*.{ts,tsx}",
+    "check:eslint": "eslint src",
+    "fix": "run-s fix:prettier fix:eslint",
+    "fix:prettier": "prettier --write src/**/*.{ts,tsx}",
+    "fix:eslint": "eslint src --fix"
+  },
+  "dependencies": {
+    "yoga-layout-prebuilt": "^1.10.0"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.3.4",
+    "@types/mocha": "^10.0.1",
+    "@types/node": "^18.11.11",
+    "@typescript-eslint/eslint-plugin": "^5.45.1",
+    "@typescript-eslint/parser": "^5.45.1",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "chai": "^4.3.7",
+    "eslint": "^8.29.0",
+    "mocha": "^10.1.0",
+    "npm-run-all": "^4.1.5",
+    "nyc": "^15.1.0",
+    "prettier": "^2.8.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^4.9.3"
+  }
 }
