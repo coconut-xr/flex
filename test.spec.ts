@@ -1,5 +1,7 @@
+//@ts-ignore
 import { expect } from "chai"
-import { propertyMap, FlexNode, fromYoga, YogaNodeProperties } from "./src"
+import { FlexNode, fromYoga, YogaNodeProperties, loadYoga } from "./src/index.js"
+import { propertyMap } from "./src/property-map.js"
 
 const testValues: Omit<YogaNodeProperties, "measureFunc"> = {
     alignContent: "center",
@@ -42,9 +44,13 @@ const testValues: Omit<YogaNodeProperties, "measureFunc"> = {
 const properties = Object.keys(testValues) as Array<keyof typeof testValues>
 
 describe("set & get properties", () => {
-    const node = new FlexNode(1)
+    let yoga: any
+    let node: FlexNode
 
-    const rawValues: any = {}
+    before(async () => {
+        yoga = await loadYoga().catch(console.error)
+        node = new FlexNode(yoga, 1)
+    })
 
     it("it should throw an error", () => {
         expect(() => node.setProperty("alignItems", "centerx" as any), "assign alignItems a unkown value").to.throw(
@@ -69,22 +75,22 @@ describe("set & get properties", () => {
             `can't retranslate value "abc" of property "alignContent"`
         )
 
-        expect(() => (node as any).getComputed("borderx")).to.throw(
-            `layout value "borderx" is not exisiting`
-        )
+        expect(() => (node as any).getComputed("borderx")).to.throw(`unkown property "borderx"`)
+    })
+    const rawValues: any = {}
+
+    it("should get all raw values", () => {
+        //get raw vaues
+        properties.forEach((property) => (rawValues[property] = flatten(node.getProperty(property))))
     })
 
-    //get raw vaues
-    properties.forEach(
-        (property) => (rawValues[property] = flatten(node["callNodeFunction"]("get", propertyMap[property])))
-    )
-
     it("it should get the default values", () => {
-        properties.forEach((property) =>
-            expect(node.getProperty(property), `get default for ${property}`).to.equal(
-                propertyMap[property as keyof typeof propertyMap].default
-            )
-        )
+        properties.forEach((property) => {
+            const info = propertyMap[property as keyof typeof propertyMap]
+            if ("default" in info) {
+                expect(node.getProperty(property), `get default for ${property}`).to.equal(info.default)
+            }
+        })
     })
 
     it("it should set new values", () => {
@@ -105,7 +111,7 @@ describe("set & get properties", () => {
         properties.forEach(
             (property) =>
                 expect(
-                    equal(flatten(node["callNodeFunction"]("get", propertyMap[property])), rawValues[property]),
+                    equal(flatten(node.getProperty(property)), rawValues[property]),
                     `compare ${property} to the default value`
                 ).to.be.true
         )
@@ -113,10 +119,19 @@ describe("set & get properties", () => {
 })
 
 describe("add, remove & reorder children & layout", () => {
-    const parent = new FlexNode(0.01)
-    const child1 = new FlexNode(0.01)
-    const child2 = new FlexNode(0.01)
-    const child3 = new FlexNode(0.01)
+    let yoga: any
+    let parent: FlexNode
+    let child1: FlexNode
+    let child2: FlexNode
+    let child3: FlexNode
+
+    before(async () => {
+        yoga = await loadYoga()
+        parent = new FlexNode(yoga, 0.01)
+        child1 = new FlexNode(yoga, 0.01)
+        child2 = new FlexNode(yoga, 0.01)
+        child3 = new FlexNode(yoga, 0.01)
+    })
 
     it("add children in order", () => {
         child1.index = 0
@@ -200,6 +215,9 @@ function equal(val1: any, val2: any) {
 }
 
 function flatten(val: any): any {
+    if (val == null) {
+        return val
+    }
     if (typeof val === "object" && "value" in val) {
         return val.value
     }

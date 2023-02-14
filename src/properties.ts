@@ -1,10 +1,9 @@
-import { UNIT_AUTO, UNIT_PERCENT, UNIT_POINT, UNIT_UNDEFINED } from "yoga-layout-prebuilt"
-
 export type PropertyInformation =
     | {
           type: "enum"
           enumMap: { [key in string]?: number }
           default: string
+          manual: true
       }
     | {
           type: "value"
@@ -12,6 +11,7 @@ export type PropertyInformation =
           pointUnit: boolean
           percentUnit: boolean
           autoUnit: boolean
+          manual: true
       }
 
 export function toYoga(precision: number, propertyInformation: PropertyInformation, name: string, value: any): any {
@@ -45,22 +45,32 @@ export function toYoga(precision: number, propertyInformation: PropertyInformati
     return value
 }
 
-export function fromYoga(precision: number, propertyInformation: PropertyInformation, name: string, value: any): any {
+export function fromYoga(
+    precision: number,
+    propertyInformation:
+        | PropertyInformation
+        | {
+              type: "value"
+              manual: false
+          },
+    name: string,
+    value: any
+): any {
     if (typeof value === "object") {
         switch (value.unit) {
-            case UNIT_AUTO:
+            case 3: //Yoga.UNIT_AUTO:
                 if (name === "flexBasis") {
                     return null //yoga returns unit auto, but there is not setFlexBasisAuto, therefore we can't let "auto" exist on flexBasis
                 }
                 value = "auto"
                 break
-            case UNIT_PERCENT:
+            case 2: //Yoga.UNIT_PERCENT
                 value = `${value.value}%`
                 break
-            case UNIT_POINT:
+            case 1: //Yoga.UNIT_POINT:
                 value = value.value
                 break
-            case UNIT_UNDEFINED:
+            case 0: //Yoga.UNIT_UNDEFINED:
                 value = null
                 break
             default:
@@ -81,7 +91,7 @@ export function fromYoga(precision: number, propertyInformation: PropertyInforma
         if (isNaN(value)) {
             return null
         }
-        return propertyInformation.pointUnit ? value * precision : value
+        return !propertyInformation.manual || propertyInformation.pointUnit ? value * precision : value
     }
 
     //string value (percent / auto / null)

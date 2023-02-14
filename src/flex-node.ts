@@ -1,45 +1,50 @@
-import { YogaNode, Node, YogaEdge } from "yoga-layout-prebuilt"
-import { fromYoga, toYoga, propertyMap } from "."
+import { fromYoga, toYoga } from "./index.js"
+import { propertyMap } from "./property-map.js"
 
-type FilterGetComputed<T, Name extends keyof T> = Name extends `getComputed${infer PropertyName}`
-    ? T[Name] extends (...args: Array<any>) => number
-        ? PropertyName
-        : never
-    : never
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+//@ts-ignore
+import type { Node } from "yoga-wasm-web"
 
-export type GetEdgeParams<T> = T extends (...args: infer Params) => number
-    ? Params extends []
-        ? []
-        : [edge: YogaEdge]
-    : never
+export type MeasureFunction = (
+    width: number,
+    widthMode: number,
+    height: number,
+    heightMode: number
+) => { width: number; height: number }
 
-export type LayoutKeys = Uncapitalize<FilterGetComputed<YogaNode, keyof YogaNode>>
+export type PropertyMap = typeof propertyMap
 
-type PropertyMap = typeof propertyMap
+export type ComputedPropertyMap = {
+    [Key in keyof PropertyMap as PropertyMap[Key] extends { computed: true } ? Key : never]: PropertyMap[Key]
+}
+
+export type ManualPropertyMap = {
+    [Key in keyof PropertyMap as PropertyMap[Key] extends { manual: true } ? Key : never]: PropertyMap[Key]
+}
 
 export type YogaNodeProperties = {
-    [Key in keyof PropertyMap]?: PropertyMap[Key] extends { type: "enum"; enumMap: object }
-        ? keyof PropertyMap[Key]["enumMap"]
+    [Key in keyof ManualPropertyMap]?: ManualPropertyMap[Key] extends { type: "enum"; enumMap: object }
+        ? keyof ManualPropertyMap[Key]["enumMap"]
         :
               | number
-              | (PropertyMap[Key] extends { autoUnit: true } ? "auto" : never)
-              | (PropertyMap[Key] extends {
+              | (ManualPropertyMap[Key] extends { autoUnit: true } ? "auto" : never)
+              | (ManualPropertyMap[Key] extends {
                     percentUnit: true
                 }
                     ? `${number}%`
                     : never)
 } & {
-    measureFunc?: YogaNode["setMeasureFunc"] extends (args: infer Param) => any ? Param : never
+    measureFunc?: MeasureFunction
 }
 
 export class FlexNode {
-    protected readonly node: YogaNode
+    protected readonly node: Node
     protected readonly children: Array<this> = []
     public index = 0
     private shouldBeDestroyed = false
 
-    constructor(protected readonly precision: number) {
-        this.node = Node.create()
+    constructor(yoga: any, protected readonly precision: number) {
+        this.node = yoga.Node.create()
     }
 
     destroy(): void {
@@ -51,7 +56,7 @@ export class FlexNode {
 
         let i = 0
 
-        let oldChildNode: YogaNode | undefined
+        let oldChildNode: Node | undefined
         let correctChild: this | undefined
         while ((oldChildNode = this.node.getChild(i)) != null || (correctChild = this.children[i]) != null) {
             if (oldChildNode != null && correctChild != null && yogaNodeEqual(oldChildNode, correctChild.node)) {
@@ -94,41 +99,44 @@ export class FlexNode {
         }
     }
 
-    getComputed<Key extends LayoutKeys>(key: Key, ...params: GetEdgeParams<YogaNode[`getComputed${Capitalize<Key>}`]>) {
-        const func: (...params: Array<any>) => any = this.node[`getComputed${capitalize(key)}`]
-        if (func == null) {
-            throw `layout value "${key}" is not exisiting`
+    getComputed<Key extends keyof ComputedPropertyMap>(name: Key) {
+        const propertyInfo = propertyMap[name]
+        if (propertyInfo == null) {
+            throw `unkown property "${name}"`
         }
-        return func.call(this.node, ...params) * this.precision
+        if ("edge" in propertyInfo) {
+            return this.node[`getComputed${propertyInfo.functionName}`](propertyInfo.edge) * this.precision
+        }
+        return fromYoga(this.precision, propertyInfo, name, this.node[`getComputed${propertyInfo.functionName}`]())
     }
 
     setProperty<Name extends keyof YogaNodeProperties>(name: Name, value: YogaNodeProperties[Name]): void {
-        if (isNotMeasureFunc(name)) {
-            const propertyInfo = propertyMap[name]
-            if (propertyInfo == null) {
-                throw `unkown property "${name}"`
+        if (isMeasureFunc(name)) {
+            //unsert
+            if (value == null) {
+                (this.node as any).unsetMeasureFunc()
+                return
             }
-            this.callNodeFunction("set", propertyInfo, toYoga(this.precision, propertyInfo, name, value))
-            return
-        }
-        if (value == null) {
-            this.node.unsetMeasureFunc()
-        } else {
+
+            //set
             this.node.setMeasureFunc(wrapMeasureFunc(value as any, this.precision))
             this.node.markDirty()
+            return
         }
-    }
 
-    protected callNodeFunction<Prefix extends "get" | "set", Name extends keyof typeof propertyMap>(
-        prefix: Prefix,
-        propertyInformation: typeof propertyMap[Name],
-        ...params: Array<any>
-    ) {
-        const func: (...params: Array<any>) => any = this.node[`${prefix}${propertyInformation.functionName}`]
-        if ("edge" in propertyInformation) {
-            return func.call(this.node, propertyInformation.edge, ...params)
+        const propertyInfo = propertyMap[name as keyof ManualPropertyMap]
+        if (propertyInfo == null) {
+            throw `unkown property "${name}"`
+        }
+        const yogaValue = toYoga(this.precision, propertyInfo, name, value)
+        if ("edge" in propertyInfo) {
+            this.node[`set${propertyInfo.functionName}`].call<Node, [0 | 1 | 2 | 3, any], void>(
+                this.node,
+                propertyInfo.edge,
+                yogaValue
+            )
         } else {
-            return func.call(this.node, ...params)
+            this.node[`set${propertyInfo.functionName}`].call<Node, [any], void>(this.node, yogaValue)
         }
     }
 
@@ -137,33 +145,33 @@ export class FlexNode {
         if (propertyInfo == null) {
             throw `unkown property "${name}"`
         }
-        return fromYoga(this.precision, propertyInfo, name, this.callNodeFunction("get", propertyInfo))
+        let response: any
+        if ("edge" in propertyInfo) {
+            response = this.node[`get${propertyInfo.functionName}`].call<Node, [0 | 1 | 2 | 3], any>(
+                this.node,
+                propertyInfo.edge
+            )
+        } else {
+            response = this.node[`get${propertyInfo.functionName}`].call<Node, [], any>(this.node)
+        }
+        return fromYoga(this.precision, propertyInfo, name, response)
     }
 }
 
-function yogaNodeEqual(n1: YogaNode, n2: YogaNode): boolean {
+function yogaNodeEqual(n1: Node, n2: Node): boolean {
     return (n1 as any)["__nbindPtr"] === (n2 as any)["__nbindPtr"]
 }
 
-function capitalize<Key extends string>(key: Key) {
-    return `${key.charAt(0).toUpperCase()}${key.slice(1)}` as Capitalize<Key>
+function isMeasureFunc(value: keyof YogaNodeProperties): value is "measureFunc" {
+    return value === "measureFunc"
 }
 
-function isNotMeasureFunc(value: keyof YogaNodeProperties): value is Exclude<keyof YogaNodeProperties, "measureFunc"> {
-    return value != "measureFunc"
-}
-
-type MeasureFunc = YogaNodeProperties["measureFunc"] extends infer Y | undefined ? Y : never
-
-function wrapMeasureFunc(func: MeasureFunc, precision: number): MeasureFunc {
+function wrapMeasureFunc(func: MeasureFunction, precision: number): MeasureFunction {
     return (width, wMode, height, hMode) => {
         const result = func(width * precision, wMode, height * precision, hMode)
-        if (result == null) {
-            return null
-        }
         return {
-            width: result.width == null ? undefined : Math.ceil(result.width / precision),
-            height: result.height == null ? undefined : Math.ceil(result.height / precision),
+            width: Math.ceil(result.width / precision),
+            height: Math.ceil(result.height / precision),
         }
     }
 }
