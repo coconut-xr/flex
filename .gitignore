@@ -2,4 +2,4 @@
 /dist/
 /package-lock.json
 /.nyc_output
-/src/property-map.ts
+/src/setter.ts

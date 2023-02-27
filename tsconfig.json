@@ -6,7 +6,7 @@
     "lib": ["ESNext"],
     "target": "ESNext",
     "module": "ESNext",
-    "moduleResolution": "NodeNext",
+    "moduleResolution": "nodenext",
     "experimentalDecorators": true,
     "downlevelIteration": true,
     "skipLibCheck": true,

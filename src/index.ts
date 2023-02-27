@@ -1,11 +1,9 @@
-export * from "./property-conversion.js";
-export * from "./property-map.js";
+export * from "./utils.js"
+export * from "./setter.js"
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-//@ts-ignore
-import * as Yoga from "yoga-wasm-web";
-import { encoded } from "./yoga.js";
+import createYoga, { Yoga } from "yoga-wasm-web";
+import { encoded } from "./wasm.js";
 
-export function loadYoga(): Promise<Yoga.Yoga> {
-  return Yoga.default(Buffer.from(encoded, "base64"));
+export function loadYoga(): Promise<Yoga> {
+  return createYoga(Buffer.from(encoded, "base64"))
 }

@@ -12,9 +12,9 @@
     "type": "module",
     "scripts": {
         "test": "nyc mocha ./test.spec.ts",
-        "property-map": "run-s property-map:generate property-map:fix",
-        "property-map:generate": "ts-node --esm scripts/generate-property-map.ts ",
-        "property-map:fix": "prettier --write src/property-map.ts",
+        "setter": "run-s setter:generate setter:fix",
+        "setter:generate": "ts-node --esm scripts/generate-setter.ts ",
+        "setter:fix": "prettier --write src/setter.ts",
         "build": "tsc --p build.tsconfig.json",
         "check": "run-s check:prettier check:eslint",
         "check:prettier": "prettier --check src/**/*.{ts,tsx}",
@@ -35,7 +35,7 @@
         "url": "git@github.com:cocoss-org/co-yoga.git"
     },
     "dependencies": {
-        "yoga-wasm-web": "^0.3.1"
+        "yoga-wasm-web": "^0.3.2"
     },
     "devDependencies": {
         "@types/chai": "^4.3.3",
