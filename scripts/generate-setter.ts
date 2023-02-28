@@ -42,7 +42,7 @@ async function main() {
   };
   const gutterMap = {
     Row: GUTTER_ROW,
-    Column: GUTTER_COLUMN
+    Column: GUTTER_COLUMN,
   };
   const yogaKeys = Object.entries(yoga);
 
@@ -50,8 +50,6 @@ async function main() {
     str.toLowerCase().replace(/_[a-z]/g, (letter) => `-${letter.slice(1)}`);
 
   const nodeKeys = Object.keys(Object.getPrototypeOf(node));
-
-  //TODO: setGrapColumn, setGapRow
 
   const properties = nodeKeys
     .filter(
@@ -67,6 +65,7 @@ async function main() {
       return [propertyName, baseFnName];
     });
   const lookupTables = new Map<string, string>();
+  const importedTypesFromYoga = new Set<string>();
   const setterFunctions: Array<[string, string]> = [];
   for (const [propertyName, functionName] of properties) {
     const enumPrefix = enumsToPrefix[propertyName];
@@ -86,18 +85,27 @@ async function main() {
             enums.map(([name, value]) => [
               kebabCaseFromSnakeCase(name.slice(enumPrefix.length)),
               value as any,
+              name,
             ]),
+            importedTypesFromYoga,
           ),
         );
       }
-      convertFunction = (defaultValue, setter) =>
-        setter(
+      convertFunction = (defaultValue, setter) => {
+        const enumType = enumPrefix
+          .slice(0, -1)
+          .split("_")
+          .map((split) => split[0] + split.slice(1).toLowerCase())
+          .join("");
+        importedTypesFromYoga.add(enumType);
+        return setter(
           `convertEnum(${lutName}, input, ${
             defaultValue === null || isNaN(defaultValue as any)
               ? "NaN"
               : JSON.stringify(defaultValue)
-          })`,
+          } as ${enumType})`,
         );
+      };
       types = [
         ...enums.map(([name]) => `"${kebabCaseFromSnakeCase(name.slice(enumPrefix.length))}"`),
         "undefined",
@@ -120,7 +128,7 @@ async function main() {
             : JSON.stringify(defaultValue);
         return setter(
           pointUnit
-            ? `convertPoint(input, precision, ${defaultValueString})`
+            ? `convertPoint(input, precision, ${defaultValueString})${propertyName === "margin" ? " as number" : ""}`
             : `input ?? ${defaultValueString}`,
         );
       };
@@ -132,30 +140,31 @@ async function main() {
           node[`get${functionName}` as "getBorder"](edge),
         );
         const edgePropertyName = `${propertyName}${edgeKey}`;
+        const edgeType = `EDGE_${edgeKey.toUpperCase()}`;
+        importedTypesFromYoga.add(edgeType);
         setterFunctions.push([
           edgePropertyName,
           `(node: Node, precision: number, input: ${types.join(" | ")}) =>
               ${convertFunction(
                 defaultValue,
                 (value) => `
-                  node.set${functionName}(${edge}, ${value})`,
+                  node.set${functionName}(${edge} as ${edgeType}, ${value})`,
               )}`,
         ]);
       }
-    } else if(propertiesWithGutter.has(propertyName)) {
+    } else if (propertiesWithGutter.has(propertyName)) {
       for (const [gutterKey, gutter] of Object.entries(gutterMap)) {
-        const defaultValue = fromYoga(
-          propertyName,
-          node[`get${functionName}` as "getGap"](gutter),
-        );
+        const defaultValue = fromYoga(propertyName, node[`get${functionName}` as "getGap"](gutter));
         const gutterPropertyName = `${propertyName}${gutterKey}`;
+        const gutterType = `GUTTER_${gutterKey.toUpperCase()}`;
+        importedTypesFromYoga.add(gutterType);
         setterFunctions.push([
           gutterPropertyName,
           `(node: Node, precision: number, input: ${types.join(" | ")}) =>
               ${convertFunction(
                 defaultValue,
                 (value) => `
-                  node.set${functionName}(${gutter}, ${value})`,
+                  node.set${functionName}(${gutter} as ${gutterType}, ${value})`,
               )}`,
         ]);
       }
@@ -176,13 +185,14 @@ async function main() {
   writeFileSync(
     "src/setter.ts",
     `import { Node } from "yoga-wasm-web"
+    import type { ${Array.from(importedTypesFromYoga).join(", ")} } from "yoga-wasm-web"
     function convertEnum<T extends { [Key in string]: number }>(lut: T, input: keyof T | undefined, defaultValue: T[keyof T]): T[keyof T] {
       if(input == null) {
         return defaultValue
       }
       const resolvedValue = lut[input]
       if(resolvedValue == null) {
-        throw new Error(\`unexpected value ${"${input as string}"}, expected ${"${Object.keys(lut).join(\", \")}"}\`)
+        throw new Error(\`unexpected value ${"${input as string}"}, expected ${'${Object.keys(lut).join(", ")}'}\`)
       }
       return resolvedValue
     }
@@ -199,9 +209,18 @@ async function main() {
   );
 }
 
-function createLookupTable(name: string, values: Array<[string, string]>): string {
+function createLookupTable(
+  name: string,
+  values: Array<[string, string, string]>,
+  importedTypesFromYoga: Set<string>,
+): string {
   return `const ${name} = {
-    ${values.map(([key, value]) => `"${key}": ${value}`).join(",\n")}
+    ${values
+      .map(([key, value, type]) => {
+        importedTypesFromYoga.add(type);
+        return `"${key}": ${value} as ${type}`;
+      })
+      .join(",\n")}
   } as const`;
 }
 

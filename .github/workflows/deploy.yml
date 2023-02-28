@@ -26,7 +26,7 @@ jobs:
               run: npm install
 
             - name: Property-Map
-              run: npm run property-map
+              run: npm run setter
 
             - name: Check
               run: npm run check
