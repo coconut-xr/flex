@@ -1,9 +1,9 @@
 import { MeasureFunction, Node } from "yoga-wasm-web";
-import { setter } from "./setter.js"
+import { setter } from "./setter.js";
 
 export type YogaProperties = {
   [Key in keyof typeof setter]?: Parameters<(typeof setter)[Key]>[2];
-}
+};
 
 export function yogaNodeEqual(n1: Node, n2: Node): boolean {
   return (n1 as any)["__nbindPtr"] === (n2 as any)["__nbindPtr"];
