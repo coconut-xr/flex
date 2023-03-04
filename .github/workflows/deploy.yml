@@ -25,7 +25,10 @@ jobs:
             - name: Install Dependencies
               run: npm install
 
-            - name: Property-Map
+            - name: Inline Wasm as Base64
+              run: npm run inline-wasm
+
+            - name: Setters
               run: npm run setter
 
             - name: Check

@@ -10,12 +10,11 @@ import {
   UNIT_POINT,
   UNIT_UNDEFINED,
 } from "yoga-wasm-web";
-import createYoga from "yoga-wasm-web";
-import { encoded } from "../src/wasm.js";
 import { GUTTER_ROW, GUTTER_COLUMN } from "yoga-wasm-web";
+import { loadYoga } from "../src/load-yoga.js";
 
 async function main() {
-  const yoga = await createYoga(Buffer.from(encoded, "base64"));
+  const yoga = await loadYoga();
   const node = yoga.Node.create();
 
   const propertiesWithEdge = new Set(["border", "padding", "margin", "position"]);
@@ -128,7 +127,9 @@ async function main() {
             : JSON.stringify(defaultValue);
         return setter(
           pointUnit
-            ? `convertPoint(input, precision, ${defaultValueString})${propertyName === "margin" ? " as number" : ""}`
+            ? `convertPoint(input, precision, ${defaultValueString})${
+                propertyName === "margin" ? " as number" : ""
+              }`
             : `input ?? ${defaultValueString}`,
         );
       };

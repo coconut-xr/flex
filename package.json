@@ -1,8 +1,9 @@
 {
     "name": "co-yoga",
-    "version": "3.0.1",
+    "version": "3.0.2",
     "files": [
-        "dist"
+        "dist",
+        "THIRD_PARTY_LICENSES"
     ],
     "main": "dist/index.js",
     "description": "yoga-layout convenience wrapper",
@@ -12,9 +13,8 @@
     "type": "module",
     "scripts": {
         "test": "nyc mocha ./test.spec.ts",
-        "setter": "run-s setter:generate setter:fix",
-        "setter:generate": "ts-node --esm scripts/generate-setter.ts ",
-        "setter:fix": "prettier --write src/setter.ts",
+        "inline-wasm": "wasmwrap --include-decode false --input node_modules/yoga-wasm-web/dist/yoga.wasm --output src/wasm.ts",
+        "setter": "ts-node --esm scripts/generate-setter.ts",
         "build": "tsc --p build.tsconfig.json",
         "check": "run-s check:prettier check:eslint",
         "check:prettier": "prettier --check src/**/*.{ts,tsx}",
@@ -55,6 +55,7 @@
         "nyc": "^15.1.0",
         "prettier": "^2.7.1",
         "ts-node": "^10.9.1",
-        "typescript": "^4.9.5"
+        "typescript": "^4.9.5",
+        "wasmwrap": "^1.0.0"
     }
 }
