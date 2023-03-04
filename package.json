@@ -1,13 +1,13 @@
 {
-    "name": "co-yoga",
+    "name": "@coconut-xr/flex",
     "version": "3.0.2",
     "files": [
         "dist",
         "THIRD_PARTY_LICENSES"
     ],
     "main": "dist/index.js",
-    "description": "yoga-layout convenience wrapper",
-    "homepage": "https://cocoss-org.github.io/co-yoga",
+    "description": "typescript css flexbox properties for yoga",
+    "homepage": "https://coconut-xr.github.io/flex",
     "license": "SEE LICENSE IN LICENSE",
     "author": "Bela Bohlender",
     "type": "module",
@@ -32,7 +32,7 @@
     ],
     "repository": {
         "type": "git",
-        "url": "git@github.com:cocoss-org/co-yoga.git"
+        "url": "git@github.com:coconut-xr/flex.git"
     },
     "dependencies": {
         "base64-js": "^1.5.1",

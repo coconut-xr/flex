@@ -1,16 +1,10 @@
-# co-yoga
+# @coconut-xr/flex
 
-[![Build Status](https://img.shields.io/github/workflow/status/cocoss-org/co-yoga/Depolyment)](https://github.com/cocoss-org/co-yoga/actions)&nbsp;
-[![Npm package version](https://badgen.net/npm/v/co-yoga)](https://npmjs.com/package/co-yoga)&nbsp;
-[![GitHub license](https://img.shields.io/github/license/cocoss-org/co-yoga.svg)](https://github.com/cocoss-org/co-yoga/blob/master/LICENSE)&nbsp;
-[![Twitter](https://badgen.net/badge/icon/twitter?icon=twitter&label)](https://twitter.com/BelaBohlender)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/coconut-xr/flex/.github/workflows/deploy.yml)](https://github.com/coconut-xr/flex/actions)&nbsp;
+[![Npm package version](https://badgen.net/npm/v/@coconut-xr/flex)](https://npmjs.com/package/@coconut-xr/flex)&nbsp;
+[![GitHub license](https://img.shields.io/github/license/coconut-xr/flex.svg)](https://github.com/coconut-xr/flex/blob/master/LICENSE)&nbsp;
+[![Twitter](https://badgen.net/badge/icon/twitter?icon=twitter&label)](https://twitter.com/coconut_xr)
 
-yoga-layout convenience wrapper
+typescript css flexbox properties for yoga
 
-`npm i co-yoga`
-
-# Usage
-
-*Changes to the yoga tree are only made directly before calculateLayout is executed on the root node*
-
-`node.destroy()`, `node.removeChild()`, `and node.insertChild()` will only have an effect after calculateLayout
+`npm i @coconut-xr/flex`
