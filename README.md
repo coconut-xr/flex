@@ -8,3 +8,5 @@
 typescript css flexbox properties for yoga
 
 `npm i @coconut-xr/flex`
+
+*the wasm code for yoga is available [here](https://coconut-xr.github.io/flex/yoga.wasm)*
