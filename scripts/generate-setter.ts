@@ -11,10 +11,10 @@ import {
   UNIT_UNDEFINED,
 } from "yoga-wasm-web";
 import { GUTTER_ROW, GUTTER_COLUMN } from "yoga-wasm-web";
-import { loadYoga } from "../src/load-yoga.js";
+import { loadYogaBase64 } from "../src/load-base64.js";
 
 async function main() {
-  const yoga = await loadYoga();
+  const yoga = await loadYogaBase64();
   const node = yoga.Node.create();
 
   const propertiesWithEdge = new Set(["border", "padding", "margin", "position"]);

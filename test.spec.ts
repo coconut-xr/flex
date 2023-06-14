@@ -17,7 +17,7 @@ import {
   WRAP_WRAP_REVERSE,
 } from "yoga-wasm-web";
 import { EDGE_TOP } from "yoga-wasm-web";
-import { loadYoga, setter } from "./src/index.js";
+import { loadYogaBase64, setter } from "./src/index.js";
 import { commitYogaChildren, setMeasureFunc, YogaProperties } from "./src/utils.js";
 
 const testValues: YogaProperties = {
@@ -131,7 +131,7 @@ describe("set & get properties", () => {
   const rawValues: any = {};
 
   before(async () => {
-    yoga = await loadYoga().catch(console.error);
+    yoga = await loadYogaBase64().catch(console.error);
     node = yoga.Node.create();
   });
 
@@ -209,7 +209,7 @@ describe("add, remove & reorder children & layout", () => {
   let child3: Node;
 
   before(async () => {
-    yoga = await loadYoga();
+    yoga = await loadYogaBase64();
     parent = yoga.Node.create();
     child1 = yoga.Node.create();
     child2 = yoga.Node.create();

@@ -1,6 +1,6 @@
 {
     "name": "@coconut-xr/flex",
-    "version": "3.0.2",
+    "version": "3.0.3",
     "files": [
         "dist",
         "THIRD_PARTY_LICENSES"
@@ -17,10 +17,10 @@
         "setter": "ts-node --esm scripts/generate-setter.ts",
         "build": "tsc --p build.tsconfig.json",
         "check": "run-s check:prettier check:eslint",
-        "check:prettier": "prettier --check src/**/*.{ts,tsx}",
+        "check:prettier": "prettier --check src/**/*.ts",
         "check:eslint": "eslint src",
         "fix": "run-s fix:prettier fix:eslint",
-        "fix:prettier": "prettier --write src/**/*.{ts,tsx}",
+        "fix:prettier": "prettier --write src/**/*.ts",
         "fix:eslint": "eslint src --fix",
         "inlinewasm": "inlinewasm node_modules/yoga-wasm-web/dist/yoga.wasm --output src/yoga.js"
     },
